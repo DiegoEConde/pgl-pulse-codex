@@ -36,3 +36,16 @@ Esta estructura convierte el mockup aprobado en una aplicación Next.js real, ma
 ## Integración futura
 
 Cuando las pantallas estén aprobadas, `lib/mock` podrá ser sustituido por una capa de servicios y repositorios conectada a Supabase, sin mover responsabilidades de datos a los componentes visuales.
+
+## Contrato Compras → Reparto
+
+`PurchasesContext` separa `todayOrders` de `orderHistory` y expone `finalizeDailyOrders()`.
+
+Cuando Reparto implemente la validación del cierre diario deberá invocar esa acción una sola vez. La acción:
+
+1. mueve todos los pedidos del día al historial;
+2. vacía la lista operativa de pedidos del día;
+3. conserva el historial completo en memoria;
+4. permite que Compras muestre únicamente los 10 registros más recientes.
+
+Compras no ejecuta el cierre por sí misma. La autoridad para finalizar el día pertenece al módulo Reparto.
