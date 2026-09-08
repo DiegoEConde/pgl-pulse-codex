@@ -48,7 +48,7 @@ export default function StockScreen() {
       <PageHeader
         title="Stock"
         action={
-          <div className={styles.stockTotal}>
+          <div className={layout.total}>
             <strong>{stockUnits.length}</strong>
             <span>Dispositivos en stock</span>
           </div>

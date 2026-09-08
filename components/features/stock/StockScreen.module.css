@@ -25,8 +25,3 @@
 .step small { margin-top: 4px; color: var(--muted); font-size: 10px; }
 @media (max-width: 950px) { .detailGrid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 680px) { .detailGrid { grid-template-columns: 1fr; } }
-
-.stockTotal { display: grid; gap: 6px; justify-items: end; padding: 10px 18px; border-right: 2px solid #58aaff; background: linear-gradient(270deg, rgba(51,156,255,.12), transparent); }
-.stockTotal strong { color: #b8eaff; font: 700 clamp(36px, 4vw, 52px)/1 var(--font-mono); text-shadow: 0 0 10px rgba(88,170,255,.8), 0 0 28px rgba(51,156,255,.45); }
-.stockTotal span { color: #83bded; font: 10px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
-@media (max-width: 680px) { .stockTotal { padding: 8px 12px; } .stockTotal span { font-size: 9px; letter-spacing: .06em; } }
