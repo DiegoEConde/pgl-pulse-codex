@@ -1,31 +1,20 @@
-.page { display: grid; gap: 18px; }
-.toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-.searchWrap { position: relative; flex: 1; max-width: 440px; }
-.searchWrap svg { position: absolute; left: 13px; top: 50%; color: var(--dim); transform: translateY(-50%); }
-.searchWrap input { width: 100%; padding-left: 39px; }
-.count { margin-left: auto; color: var(--dim); font: 10px var(--font-mono); }
 .unitId { color: #78bfff; font-family: var(--font-mono); }
 .price strong, .price small { display: block; }
-.price small { margin-top: 4px; color: var(--dim); font-size: 9px; }
-.rowAction { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px; color: #83bded; background: transparent; border: 1px solid transparent; border-radius: 7px; font-size: 10px; }
-.rowAction:hover { border-color: var(--line); background: rgba(51,156,255,.05); }
 .empty { padding: 56px; color: var(--muted); text-align: center; }
-.originNote { display: flex; align-items: center; gap: 8px; margin-top: 13px; color: var(--dim); font-size: 10px; }
 .overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px; background: rgba(2,5,9,.76); backdrop-filter: blur(8px); }
-.modal { width: min(780px, 100%); max-height: 90vh; overflow: auto; background: #101720; border: 1px solid #2b3c4d; border-radius: 20px; box-shadow: var(--shadow); }
-.modalHeader { display: flex; justify-content: space-between; align-items: flex-start; padding: 23px 25px; border-bottom: 1px solid var(--line-soft); }
-.modalHeader h2 { margin: 6px 0 0; font-size: 21px; }
-.close { display: grid; place-items: center; width: 34px; height: 34px; color: var(--muted); background: transparent; border-radius: 9px; }
-.close:hover { color: var(--text); background: rgba(255,255,255,.04); }
+.modal { width: min(760px, 100%); max-height: 90vh; overflow: auto; background: linear-gradient(180deg, rgba(16,23,32,0.98), rgba(12,17,24,0.98)); border: 1px solid rgba(120, 196, 255, 0.28); border-radius: 22px; box-shadow: 0 20px 60px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.04); font-size: 14px; }
+.modalHeader { display: flex; align-items: flex-start; justify-content: space-between; padding: 26px 28px 20px; border-bottom: 1px solid var(--line-soft); background: linear-gradient(180deg, rgba(19,30,39,0.9), rgba(16,23,32,0.72)); }
+.modalHeader h2 { margin: 6px 0 0; font-size: 24px; letter-spacing: -0.04em; }
+.close { display: grid; place-items: center; width: 36px; height: 36px; color: var(--muted); background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.03); border-radius: 10px; }
+.close:hover { color: var(--text); background: rgba(51,156,255,.08); border-color: rgba(88,170,255,.38); }
 .detailGrid { display: grid; grid-template-columns: repeat(3, 1fr); border-bottom: 1px solid var(--line-soft); }
 .detailItem { padding: 18px 22px; border-right: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
 .detailItem small, .detailItem strong { display: block; }
 .detailItem small { margin-bottom: 7px; color: var(--dim); font: 9px var(--font-mono); text-transform: uppercase; }
-.detailItem strong { font-size: 12px; }
-.body { padding: 23px 25px; }
-.bodyTitle { display: flex; align-items: center; justify-content: space-between; margin-bottom: 17px; }
-.bodyTitle h3 { margin: 0; font-size: 12px; }
-.editButton { display: inline-flex; align-items: center; gap: 6px; padding: 8px 10px; color: #84bff0; background: rgba(51,156,255,.05); border: 1px solid rgba(51,156,255,.15); border-radius: 8px; font-size: 10px; }
+.detailItem strong { font-size: 14px; }
+.body { padding: 22px 24px; }
+.bodyTitle { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.bodyTitle h3 { margin: 0; font-size: 13px; }
 .timeline { display: grid; gap: 0; }
 .step { position: relative; display: grid; grid-template-columns: 17px 1fr; gap: 12px; padding-bottom: 20px; }
 .step::before { content: ""; position: absolute; left: 7px; top: 14px; bottom: 0; width: 1px; background: #29435a; }
@@ -34,15 +23,10 @@
 .step strong, .step small { display: block; }
 .step strong { font-size: 11px; }
 .step small { margin-top: 4px; color: var(--muted); font-size: 10px; }
-.acuNote { display: flex; gap: 9px; margin-top: 3px; padding: 13px 14px; color: #88a1b5; background: rgba(86,214,163,.04); border: 1px solid rgba(86,214,163,.13); border-radius: 10px; font-size: 11px; line-height: 1.5; }
-.form { display: grid; gap: 18px; padding: 24px; }
-.formGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-.field { display: grid; gap: 7px; }
-.field label { color: #7f90a2; font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
-.field input, .field select { width: 100%; padding: 11px 12px; color: var(--text); background: #0b1118; border: 1px solid var(--line); border-radius: 9px; outline: none; }
-.field input:focus, .field select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(51,156,255,.08); }
-.actions { display: flex; justify-content: flex-end; gap: 9px; padding: 0 24px 24px; }
-.cancel { padding: 10px 14px; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 9px; }
-.save { width: auto; gap: 7px; }
 @media (max-width: 950px) { .detailGrid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 680px) { .detailGrid, .formGrid { grid-template-columns: 1fr; } .toolbar { align-items: stretch; flex-direction: column; } .searchWrap { width: 100%; max-width: none; } .count { margin-left: 0; } }
+@media (max-width: 680px) { .detailGrid { grid-template-columns: 1fr; } }
+
+.stockTotal { display: grid; gap: 6px; justify-items: end; padding: 10px 18px; border-right: 2px solid #58aaff; background: linear-gradient(270deg, rgba(51,156,255,.12), transparent); }
+.stockTotal strong { color: #b8eaff; font: 700 clamp(36px, 4vw, 52px)/1 var(--font-mono); text-shadow: 0 0 10px rgba(88,170,255,.8), 0 0 28px rgba(51,156,255,.45); }
+.stockTotal span { color: #83bded; font: 10px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
+@media (max-width: 680px) { .stockTotal { padding: 8px 12px; } .stockTotal span { font-size: 9px; letter-spacing: .06em; } }

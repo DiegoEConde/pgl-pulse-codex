@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { PackageCheck, Pencil, Search, ShieldCheck, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
 import { formatUsd } from "@/lib/formatters";
 import { stockMock, type StockUnit } from "@/lib/mock/stock";
+import layout from "@/components/ui/OperationalLayout.module.css";
 import styles from "./StockScreen.module.css";
 
 const formatDate = (date: string) =>
@@ -15,67 +16,87 @@ const formatDate = (date: string) =>
   }).format(new Date(`${date}T12:00:00`));
 
 export default function StockScreen() {
-  const [units, setUnits] = useState(stockMock);
+  const units = stockMock;
   const [search, setSearch] = useState("");
   const [brand, setBrand] = useState("TODAS");
   const [category, setCategory] = useState("TODAS");
+  const [supplier, setSupplier] = useState("TODOS");
   const [detail, setDetail] = useState<StockUnit | null>(null);
-  const [editing, setEditing] = useState<StockUnit | null>(null);
-  const [dirty, setDirty] = useState(false);
 
   const stockUnits = units.filter((unit) => unit.state === "STOCK");
   const brands = [...new Set(stockUnits.map((unit) => unit.brand))];
   const categories = [...new Set(stockUnits.map((unit) => unit.category))];
+  const suppliers = [...new Set(stockUnits.map((unit) => unit.supplier))];
   const filtered = useMemo(
     () =>
       units.filter((unit) => {
         const text =
-          `${unit.id} ${unit.product} ${unit.code} ${unit.variant} ${unit.color}`.toLowerCase();
+          `${unit.id} ${unit.product} ${unit.code} ${unit.variant} ${unit.ram ?? ""} ${unit.color}`.toLowerCase();
         return (
           unit.state === "STOCK" &&
           text.includes(search.toLowerCase()) &&
           (brand === "TODAS" || unit.brand === brand) &&
-          (category === "TODAS" || unit.category === category)
+          (category === "TODAS" || unit.category === category) &&
+          (supplier === "TODOS" || unit.supplier === supplier)
         );
       }),
-    [units, search, brand, category],
+    [units, search, brand, category, supplier],
   );
 
-  function requestEditClose() {
-    if (
-      dirty &&
-      !window.confirm("Hay cambios sin guardar. ¿Querés descartarlos?")
-    )
-      return;
-    setEditing(null);
-    setDirty(false);
-  }
-
-  function saveUnit(formData: FormData) {
-    if (!editing) return;
-    const updated: StockUnit = {
-      ...editing,
-      state: String(formData.get("state")) as StockUnit["state"],
-      code: String(formData.get("code")),
-      color: String(formData.get("color")),
-      costUsd: Number(formData.get("cost")),
-      salePriceUsd: Number(formData.get("price")),
-    };
-    setUnits((current) =>
-      current.map((unit) => (unit.id === updated.id ? updated : unit)),
-    );
-    setDetail(updated.state === "STOCK" ? updated : null);
-    setEditing(null);
-    setDirty(false);
-  }
-
   return (
-    <div className={`view ${styles.page}`}>
+    <div className={`view ${layout.page}`}>
       <PageHeader
-        eyebrow={`${stockUnits.length} unidades disponibles`}
         title="Stock"
-        description="Todas las Unidades físicas cuyo estado actual es STOCK."
+        action={
+          <div className={styles.stockTotal}>
+            <strong>{stockUnits.length}</strong>
+            <span>Dispositivos en stock</span>
+          </div>
+        }
       />
+
+      <div className={layout.toolbar}>
+        <label className={layout.searchWrap}>
+          <Search size={15} />
+          <input
+            className="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Buscar producto, IMEI, código o color…"
+          />
+        </label>
+        <select
+          className="filter"
+          value={brand}
+          onChange={(event) => setBrand(event.target.value)}
+        >
+          <option value="TODAS">Todas las marcas</option>
+          {brands.map((item) => (
+            <option key={item}>{item}</option>
+          ))}
+        </select>
+        <select
+          className="filter"
+          value={category}
+          onChange={(event) => setCategory(event.target.value)}
+        >
+          <option value="TODAS">Todas las categorías</option>
+          {categories.map((item) => (
+            <option key={item}>{item}</option>
+          ))}
+        </select>
+        <select
+          className="filter"
+          aria-label="Filtrar por proveedor"
+          value={supplier}
+          onChange={(event) => setSupplier(event.target.value)}
+        >
+          <option value="TODOS">Todos los proveedores</option>
+          {suppliers.map((item) => (
+            <option key={item} value={item}>{item}</option>
+          ))}
+        </select>
+      </div>
 
       <section className="panel">
         <header className="panel-head">
@@ -85,50 +106,19 @@ export default function StockScreen() {
           </div>
           <span className="badge green">Estado STOCK</span>
         </header>
-        <div className={styles.toolbar}>
-          <label className={styles.searchWrap}>
-            <Search size={15} />
-            <input
-              className="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar producto, IMEI, código o color…"
-            />
-          </label>
-          <select
-            className="filter"
-            value={brand}
-            onChange={(event) => setBrand(event.target.value)}
-          >
-            <option value="TODAS">Todas las marcas</option>
-            {brands.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-          <select
-            className="filter"
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-          >
-            <option value="TODAS">Todas las categorías</option>
-            {categories.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-          <span className={styles.count}>{filtered.length} UNIDADES</span>
-        </div>
         <div className="table-wrap">
           {filtered.length ? (
             <table>
               <thead>
                 <tr>
-                  <th>Unidad</th>
-                  <th>Producto</th>
-                  <th>IMEI / código</th>
+                  <th>Código</th>
+                  <th>Nombre</th>
+                  <th>IMEI / serie</th>
+                  <th>Variante</th>
                   <th>Color</th>
-                  <th>Origen</th>
-                  <th>Precio</th>
-                  <th></th>
+                  <th>Pedido de origen</th>
+                  <th>Proveedor</th>
+                  <th>Costo</th>
                 </tr>
               </thead>
               <tbody>
@@ -139,32 +129,15 @@ export default function StockScreen() {
                     </td>
                     <td className="product-cell">
                       <strong>{unit.product}</strong>
-                      <small>
-                        {unit.brand} · {unit.variant}
-                      </small>
                     </td>
                     <td className="mono">{unit.code}</td>
-                    <td>{unit.color}</td>
                     <td className="product-cell">
-                      <strong>Pedido #{unit.purchaseOrder}</strong>
-                      <small>{unit.supplier}</small>
+                      <strong>{unit.ram ? unit.ram + " RAM · " + unit.variant + " ROM" : unit.variant}</strong>
                     </td>
-                    <td className={styles.price}>
-                      <strong>{formatUsd(unit.salePriceUsd)}</strong>
-                      <small>Costo {formatUsd(unit.costUsd)}</small>
-                    </td>
-                    <td>
-                      <button
-                        className={styles.rowAction}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setEditing(unit);
-                          setDirty(false);
-                        }}
-                      >
-                        <Pencil size={14} /> Modificar
-                      </button>
-                    </td>
+                    <td>{unit.color}</td>
+                    <td>Pedido #{unit.purchaseOrder}</td>
+                    <td>{unit.supplier}</td>
+                    <td className={styles.price}><strong>{formatUsd(unit.costUsd)}</strong></td>
                   </tr>
                 ))}
               </tbody>
@@ -175,13 +148,9 @@ export default function StockScreen() {
             </div>
           )}
         </div>
-        <p className={styles.originNote}>
-          <PackageCheck size={14} /> Las altas de unidades se realizan desde la
-          recepción de Compras; Stock no crea existencias independientes.
-        </p>
       </section>
 
-      {detail && !editing && (
+      {detail && (
         <div
           className={styles.overlay}
           onMouseDown={(event) => {
@@ -210,7 +179,7 @@ export default function StockScreen() {
                 ["Variante", detail.variant],
                 ["Color", detail.color],
                 ["Costo", formatUsd(detail.costUsd)],
-                ["Precio sugerido", formatUsd(detail.salePriceUsd)],
+                ["Ingreso a stock", formatDate(detail.receivedAt)],
               ].map(([label, value]) => (
                 <div className={styles.detailItem} key={String(label)}>
                   <small>{label}</small>
@@ -221,15 +190,6 @@ export default function StockScreen() {
             <div className={styles.body}>
               <div className={styles.bodyTitle}>
                 <h3>Trazabilidad</h3>
-                <button
-                  className={styles.editButton}
-                  onClick={() => {
-                    setEditing(detail);
-                    setDirty(false);
-                  }}
-                >
-                  <Pencil size={13} /> Edición rápida
-                </button>
               </div>
               <div className={styles.timeline}>
                 <div className={styles.step}>
@@ -256,102 +216,11 @@ export default function StockScreen() {
                   </div>
                 </div>
               </div>
-              <div className={styles.acuNote}>
-                <ShieldCheck size={16} /> La identidad {detail.id} continuará
-                sin duplicarse cuando pase a venta, reparto, entrega o garantía.
-              </div>
             </div>
           </section>
         </div>
       )}
 
-      {editing && (
-        <div className={styles.overlay}>
-          <section className={styles.modal} role="dialog" aria-modal="true">
-            <header className={styles.modalHeader}>
-              <div>
-                <span className="eyebrow">Edición rápida · {editing.id}</span>
-                <h2>{editing.product}</h2>
-              </div>
-              <button className={styles.close} onClick={requestEditClose}>
-                <X size={20} />
-              </button>
-            </header>
-            <form action={saveUnit} onChange={() => setDirty(true)}>
-              <div className={styles.form}>
-                <div className={styles.formGrid}>
-                  <div className={styles.field}>
-                    <label htmlFor="state">Estado</label>
-                    <select id="state" name="state" required defaultValue="">
-                      <option value="" disabled>Seleccionar nuevo estado</option>
-                      <option value="REPARTO">Reparto</option>
-                      <option value="ENTREGADA">Entregada</option>
-                    </select>
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="code">IMEI / código</label>
-                    <input
-                      id="code"
-                      name="code"
-                      required
-                      defaultValue={editing.code}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="color">Color</label>
-                    <input
-                      id="color"
-                      name="color"
-                      required
-                      defaultValue={editing.color}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="cost">Costo USD</label>
-                    <input
-                      id="cost"
-                      name="cost"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      required
-                      defaultValue={editing.costUsd}
-                    />
-                  </div>
-                  <div className={styles.field}>
-                    <label htmlFor="price">Precio sugerido USD</label>
-                    <input
-                      id="price"
-                      name="price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      required
-                      defaultValue={editing.salePriceUsd}
-                    />
-                  </div>
-                </div>
-                <div className={styles.acuNote}>
-                  <ShieldCheck size={16} /> El estado sólo puede avanzar a
-                  Reparto o Entregada. Este cambio no permite retroceder.
-                </div>
-              </div>
-              <footer className={styles.actions}>
-                <button
-                  type="button"
-                  className={styles.cancel}
-                  onClick={requestEditClose}
-                >
-                  Cancelar
-                </button>
-                <button type="submit" className={`primary-btn ${styles.save}`}>
-                  Guardar cambios
-                </button>
-              </footer>
-            </form>
-          </section>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,0 +1,16 @@
+.page { display: grid; gap: 18px; min-width: 0; }
+.page > :global(.page-head) { min-height: 96px; margin: 0; align-items: center; }
+.page > :global(.page-head) h1 { margin: 0; }
+.page > :global(.panel) { margin: 0; min-width: 0; padding: 24px; }
+.page > :global(.panel) > :global(.panel-head) { min-height: 44px; margin-bottom: 20px; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0; }
+.toolbar :global(.search), .toolbar :global(.filter) { height: 42px; font-size: 13px; }
+.searchWrap { position: relative; flex: 1 1 260px; max-width: 420px; min-width: 0; }
+.searchWrap svg { position: absolute; left: 13px; top: 50%; color: var(--dim); transform: translateY(-50%); }
+.searchWrap input { width: 100%; min-width: 0; padding-left: 39px; }
+@media (max-width: 680px) {
+  .page > :global(.page-head) { min-height: 148px; gap: 16px; align-items: flex-start; justify-content: space-between; }
+  .page > :global(.panel) { padding: 18px; }
+  .toolbar { align-items: stretch; flex-direction: column; }
+  .searchWrap { flex: none; width: 100%; max-width: none; }
+}

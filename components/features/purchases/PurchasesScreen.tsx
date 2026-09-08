@@ -17,6 +17,7 @@ import {
   type PurchaseOrder,
   type PurchaseStatus,
 } from "@/lib/mock/purchases";
+import layout from "@/components/ui/OperationalLayout.module.css";
 import styles from "./PurchasesScreen.module.css";
 
 const statusClass: Record<PurchaseStatus, string> = {
@@ -119,7 +120,7 @@ export default function PurchasesScreen() {
   }
 
   return (
-    <div className={`view ${styles.page}`}>
+    <div className={`view ${layout.page}`}>
       <PageHeader
         title="Compras"
         action={
@@ -132,8 +133,8 @@ export default function PurchasesScreen() {
         }
       />
 
-      <div className={styles.toolbar}>
-        <label className={styles.searchWrap}><Search size={15} /><input className="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar pedido, proveedor o producto…" /></label>
+      <div className={layout.toolbar}>
+        <label className={layout.searchWrap}><Search size={15} /><input className="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar pedido, proveedor o producto…" /></label>
         <select className="filter" value={status} onChange={(event) => setStatus(event.target.value as PurchaseStatus | "TODOS")}><option value="TODOS">Todos los estados</option><option value="BORRADOR">Borrador</option><option value="PEDIDO">Pedido</option><option value="ENVÍO">En envío</option><option value="RECIBIDO">Recibido</option></select>
       </div>
 

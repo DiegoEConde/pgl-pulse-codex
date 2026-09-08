@@ -12,6 +12,7 @@ import {
   type Sale,
   type SaleStatus,
 } from "@/lib/mock/sales";
+import layout from "@/components/ui/OperationalLayout.module.css";
 import styles from "./SalesScreen.module.css";
 
 const statusLabel: Record<SaleStatus, string> = {
@@ -153,7 +154,7 @@ export default function SalesScreen() {
   }
 
   return (
-    <div className={`view ${styles.page}`}>
+    <div className={`view ${layout.page}`}>
       <PageHeader
         title="Ventas"
         action={
@@ -167,8 +168,8 @@ export default function SalesScreen() {
         }
       />
 
-      <div className={styles.toolbar}>
-        <label className={styles.searchWrap}>
+      <div className={layout.toolbar}>
+        <label className={layout.searchWrap}>
           <Search size={15} />
           <input
             className="search"
