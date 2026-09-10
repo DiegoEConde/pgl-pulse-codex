@@ -1,24 +1,31 @@
-# PGL Pulse — Frontend en construcción
+﻿# PGL Pulse
 
-Base de aplicación Next.js creada a partir del mockup aprobado, el PPS v1.0, la ACU v1.0 y el historial/roadmap del proyecto.
+Aplicación Next.js basada en el mockup aprobado y la arquitectura centrada en la unidad.
 
-## Ejecutar la aplicación
+## Ejecutar
 
 ```powershell
 npm install
 npm run dev
 ```
 
-Abrí `http://localhost:3000`.
+Abrir http://localhost:3000. El archivo `index.html` se conserva como referencia del mockup; la integración funciona en la aplicación Next.js.
 
-El archivo `index.html` original se conserva como referencia rápida del mockup aprobado.
+## Supabase
 
-## Alcance
+Datos, Compras, Ventas, Reparto, Stock, Inicio y Reportes están conectados a Supabase. La aplicación funciona sin cuentas, con acceso compartido mediante el rol `anon` y operaciones transaccionales.
 
-- App Router de Next.js 16 con TypeScript estricto.
-- AppShell, navegación y componentes visuales reutilizables.
-- Dashboard implementado sobre datos mock desacoplados.
-- Estructura registrada para las siete pantallas.
-- Sin conexión ni escritura en Supabase durante esta etapa.
+Copiar `.env.example` a `.env.local` y configurar la URL y la clave publicable si se trabaja en otro equipo.
 
-Este directorio es un espacio de mockups y no modifica el repositorio original `pgl-pulse`.
+Ver [estado de integración, acceso y validaciones](docs/REVISION-SUPABASE.md). Las migraciones se conservan en `supabase/migrations`.
+
+## Validar
+
+```powershell
+node --test tests/operations.test.cjs
+npm run lint
+npx tsc --noEmit --incremental false
+npm run build
+```
+
+La prueba de navegador y sus condiciones de ejecución están documentadas en la revisión de Supabase.

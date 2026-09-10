@@ -89,3 +89,7 @@
 .acuCallout { margin-top: 18px; padding: 13px; color: #85a3bc; background: rgba(86,214,163,.05); border: 1px solid rgba(86,214,163,.13); border-radius: 10px; font-size: 12px; line-height: 1.55; }
 @media (max-width: 950px) { .summary { grid-template-columns: repeat(2, 1fr); } .detailGrid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 680px) { .summary, .formGrid, .detailGrid { grid-template-columns: 1fr; } .count { margin-left: 0; } .wide { grid-column: auto; } }
+
+
+.receiptLine { padding: 16px; border: 1px solid var(--line); border-radius: 12px; display: grid; gap: 14px; }
+.receiptLine h3, .receiptLine h4 { margin: 0; }

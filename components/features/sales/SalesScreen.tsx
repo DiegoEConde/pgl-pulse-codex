@@ -1,414 +1,67 @@
-﻿"use client";
-
-import { useMemo, useState } from "react";
-import { CheckCircle2, Clock3, Eye, Plus, Search, X } from "lucide-react";
+"use client";
+import { useRef, useState, type FormEvent } from "react";
+import { Eye, Plus, Search, X } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
+import { useProgram } from "@/contexts/ProgramContext";
+import { useOperation } from "@/hooks/useOperation";
+import { runOperation } from "@/lib/supabase/operations";
 import { formatUsd } from "@/lib/formatters";
-import {
-  clientsMock,
-  salesMock,
-  sellersMock,
-  stockUnitsMock,
-  type Sale,
-  type SaleStatus,
-} from "@/lib/mock/sales";
+import { formatDate } from "@/lib/dates";
+import type { Sale, SaleStatus } from "@/types/operations";
 import layout from "@/components/ui/OperationalLayout.module.css";
 import styles from "./SalesScreen.module.css";
 
-const statusLabel: Record<SaleStatus, string> = {
-  PENDIENTE: "Pendiente",
-  PREPARANDO: "Preparando",
-  EN_REPARTO: "En reparto",
-  ENTREGADA: "Entregada",
-};
-
-const statusClass: Record<SaleStatus, string> = {
-  PENDIENTE: "amber",
-  PREPARANDO: "blue",
-  EN_REPARTO: "violet",
-  ENTREGADA: "green",
-};
-
-const formatDate = (date: string) =>
-  new Intl.DateTimeFormat("es-AR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(`${date}T12:00:00`));
-
 export default function SalesScreen() {
-  const [sales, setSales] = useState(salesMock);
-  const [availableUnits, setAvailableUnits] = useState(stockUnitsMock);
+  const { raw, sales, stock, today } = useProgram();
+  const { busy, error, setError, run } = useOperation();
+  const available = stock.filter(unit => unit.state === "STOCK");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<SaleStatus | "TODOS">("TODOS");
-  const [detail, setDetail] = useState<Sale | null>(null);
+  const [detailId, setDetailId] = useState<number | null>(null);
+  const detail = sales.find(sale => sale.id === detailId);
   const [creating, setCreating] = useState(false);
   const [dirty, setDirty] = useState(false);
-  const [selectedUnitId, setSelectedUnitId] = useState(availableUnits[0]?.id ?? "");
-  const selectedUnit = availableUnits.find((unit) => unit.id === selectedUnitId);
-
-  const salesToday = sales.filter((sale) => sale.date === "2026-08-31");
-
-  const filteredHistory = useMemo(
-    () =>
-      sales
-        .filter((sale) => {
-          const matches = `${sale.id} ${sale.product} ${sale.code} ${sale.client} ${sale.seller}`
-            .toLowerCase()
-            .includes(search.toLowerCase());
-          return matches && (status === "TODOS" || sale.status === status);
-        })
-        .slice(0, 10),
-    [sales, search, status],
-  );
-
-  const buildSaleSummary = (sale: Sale) => [
-    {
-      name: sale.product,
-      unit: sale.unitId,
-      unitPrice: sale.priceUsd,
-      total: sale.priceUsd,
-    },
-  ];
-
-  function requestClose() {
-    if (dirty && !window.confirm("Hay cambios sin guardar. ¿Querés descartarlos?"))
-      return;
-    setCreating(false);
-    setDirty(false);
+  const [unitId, setUnitId] = useState("");
+  const selected = available.find(unit => String(unit.databaseId) === unitId);
+  const requestId = useRef("");
+  const matches = (sale: Sale) => `${sale.id} ${sale.product} ${sale.code} ${sale.client} ${sale.seller}`.toLowerCase().includes(search.toLowerCase()) && (status === "TODOS" || sale.status === status);
+  const salesToday = sales.filter(sale => sale.date === today && matches(sale));
+  const history = sales.filter(sale => sale.date !== today && matches(sale)).slice(0,10);
+  function close() {
+    if (busy) return;
+    if (dirty && !window.confirm("Hay cambios sin guardar. ¿Querés descartarlos?")) return;
+    setCreating(false); setDetailId(null); setDirty(false); setError("");
   }
-
-  function createSale(formData: FormData) {
-    if (!selectedUnit) return;
-
-    const price = Number(formData.get("price"));
-    const commission = Number(formData.get("commission"));
-    const next: Sale = {
-      id: Math.max(...sales.map((sale) => sale.id)) + 1,
-      unitId: selectedUnit.id,
-      product: selectedUnit.product,
-      code: selectedUnit.code,
-      client: String(formData.get("client")),
-      seller: String(formData.get("seller")),
-      date: String(formData.get("date")),
-      priceUsd: price,
-      costUsd: selectedUnit.costUsd,
-      commissionUsd: commission,
-      paid: formData.get("paid") === "on",
-      status: "PREPARANDO",
-    };
-
-    setSales((current) => [next, ...current]);
-    setAvailableUnits((current) => current.filter((unit) => unit.id !== selectedUnit.id));
-    setCreating(false);
-    setDirty(false);
-    setDetail(next);
-
-    const remaining = availableUnits.filter((unit) => unit.id !== selectedUnit.id);
-    setSelectedUnitId(remaining[0]?.id ?? "");
+  function create(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selected) { setError("La unidad seleccionada ya no está disponible."); return; }
+    const form = new FormData(event.currentTarget);
+    void run(() => runOperation("pgl_create_sale", { p_unit: selected.databaseId, p_client: Number(form.get("client")), p_seller: Number(form.get("seller")),
+      p_date: String(form.get("date")), p_price: Number(form.get("price")), p_commission: Number(form.get("commission")), p_paid: form.get("paid") === "on", p_request: requestId.current,
+    }), id => { setCreating(false); setDirty(false); setDetailId(Number(id)); });
   }
-
-  function renderSalesTable(source: Sale[], emptyMessage: string) {
-    if (!source.length) return <div className={styles.empty}>{emptyMessage}</div>;
-
-    return (
-      <table>
-        <thead>
-          <tr>
-            <th>Venta</th>
-            <th>Cliente</th>
-            <th>Fecha</th>
-            <th>Estado</th>
-            <th>Total</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {source.map((sale) => (
-            <tr key={sale.id} onClick={() => setDetail(sale)}>
-              <td className="mono">#{sale.id}</td>
-              <td>{sale.client}</td>
-              <td>{formatDate(sale.date)}</td>
-              <td>
-                <span className={`badge ${statusClass[sale.status]}`}>
-                  {statusLabel[sale.status]}
-                </span>
-              </td>
-              <td>{formatUsd(sale.priceUsd)}</td>
-              <td>
-                <button
-                  className={styles.rowAction}
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setDetail(sale);
-                  }}
-                >
-                  <Eye size={14} /> Ver
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
+  function table(source: Sale[]) {
+    return source.length ? <table><thead><tr><th>Venta / unidad</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th>Total</th><th>Pago</th><th></th></tr></thead><tbody>{source.map(sale => <tr key={sale.id} onClick={() => { setDetailId(sale.id); setError(""); }}><td className="mono">#{sale.id}</td><td>{sale.client}</td><td>{formatDate(sale.date)}</td><td><span className={`badge ${sale.status === "ENTREGADA" ? "green" : "violet"}`}>{sale.status === "ENTREGADA" ? "Entregada" : "En reparto"}</span></td><td>{formatUsd(sale.priceUsd)}</td><td>{sale.paid ? "Verificado" : "Pendiente"}</td><td><button className={styles.rowAction} aria-label={`Ver venta ${sale.id}`}><Eye size={14} /> Ver</button></td></tr>)}</tbody></table> : <div className={styles.empty}>No hay ventas que coincidan con esta búsqueda.</div>;
   }
-
-  return (
-    <div className={`view ${layout.page}`}>
-      <PageHeader
-        title="Ventas"
-        action={
-          <button
-            className={`primary-btn ${styles.headAction}`}
-            onClick={() => setCreating(true)}
-            disabled={!availableUnits.length}
-          >
-            <Plus size={16} /> Nueva venta
-          </button>
-        }
-      />
-
-      <div className={layout.toolbar}>
-        <label className={layout.searchWrap}>
-          <Search size={15} />
-          <input
-            className="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar venta, cliente o unidad…"
-          />
-        </label>
-
-        <select
-          className="filter"
-          value={status}
-          onChange={(event) => setStatus(event.target.value as SaleStatus | "TODOS")}
-        >
-          <option value="TODOS">Todos los estados</option>
-          <option value="PENDIENTE">Pendiente</option>
-          <option value="PREPARANDO">Preparando</option>
-          <option value="EN_REPARTO">En reparto</option>
-          <option value="ENTREGADA">Entregada</option>
-        </select>
-      </div>
-
-      <section className="panel">
-        <header className="panel-head">
-          <div>
-            <span className="eyebrow">Operación de hoy · {formatDate("2026-08-31")}</span>
-            <h2>Ventas de hoy</h2>
-          </div>
-          <span className="badge blue">{salesToday.length} ventas</span>
-        </header>
-
-        <div className="table-wrap">
-          {renderSalesTable(salesToday, "No hay ventas registradas para el día de hoy.")}
-        </div>
-      </section>
-
-      <section className="panel">
-        <header className="panel-head">
-          <div>
-            <span className="eyebrow">Historial reciente</span>
-            <h2>Historial</h2>
-          </div>
-          <span className="badge muted-badge">{filteredHistory.length} resultados</span>
-        </header>
-
-        <div className="table-wrap">
-          {renderSalesTable(
-            filteredHistory,
-            "Todavía no hay ventas que coincidan con esta búsqueda.",
-          )}
-        </div>
-      </section>
-
-      {detail && (
-        <div
-          className={styles.modalOverlay}
-          onMouseDown={(event) => {
-            if (event.currentTarget === event.target) setDetail(null);
-          }}
-        >
-          <section className={styles.modal} role="dialog" aria-modal="true">
-            <header className={styles.modalHeader}>
-              <div>
-                <h2>Venta #{detail.id}</h2>
-              </div>
-              <button className={styles.close} onClick={() => setDetail(null)}>
-                <X size={20} />
-              </button>
-            </header>
-
-            <div className={styles.detailGrid}>
-              {[
-                ["Cliente", detail.client],
-                ["Fecha de venta", formatDate(detail.date)],
-                ["Total de la venta", formatUsd(detail.priceUsd)],
-                [
-                  "Estado de la venta",
-                  <span key="state" className={`badge ${statusClass[detail.status]}`}>
-                    {statusLabel[detail.status]}
-                  </span>,
-                ],
-              ].map(([label, value]) => (
-                <div className={styles.detailItem} key={String(label)}>
-                  <small>{label}</small>
-                  <strong>{value}</strong>
-                </div>
-              ))}
-            </div>
-
-            <div className={styles.detailBody}>
-              <h3>Desglose</h3>
-              <div className={styles.summaryTableWrap}>
-                <table className={styles.summaryTable}>
-                  <thead>
-                    <tr>
-                      <th>Producto</th>
-                      <th>Unidad</th>
-                      <th>Unitario</th>
-                      <th>Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {buildSaleSummary(detail).map((item) => (
-                      <tr key={`${detail.id}-${item.name}`}>
-                        <td>{item.name}</td>
-                        <td>{item.unit}</td>
-                        <td>{formatUsd(item.unitPrice)}</td>
-                        <td>{formatUsd(item.total)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
-        </div>
-      )}
-
-      {creating && (
-        <div className={styles.modalOverlay}>
-          <section className={styles.modal} role="dialog" aria-modal="true">
-            <header className={styles.modalHeader}>
-              <div>
-                <h2>Registrar venta</h2>
-              </div>
-              <button className={styles.close} onClick={requestClose}>
-                <X size={20} />
-              </button>
-            </header>
-
-            <form action={createSale} onChange={() => setDirty(true)}>
-              <div className={styles.form}>
-                <div className={styles.formGrid}>
-                  <div className={`${styles.field} ${styles.wide}`}>
-                    <label htmlFor="unit">Unidad disponible</label>
-                    <select
-                      id="unit"
-                      value={selectedUnitId}
-                      onChange={(event) => setSelectedUnitId(event.target.value)}
-                      required
-                    >
-                      {availableUnits.map((unit) => (
-                        <option value={unit.id} key={unit.id}>
-                          {unit.id} · {unit.product} · {unit.code}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {selectedUnit && (
-                    <div className={`${styles.unitPreview} ${styles.wide}`}>
-                      <div>
-                        <strong>{selectedUnit.product}</strong>
-                        <small>
-                          {selectedUnit.variant} · costo {formatUsd(selectedUnit.costUsd)}
-                        </small>
-                      </div>
-                      <span>{selectedUnit.id}</span>
-                    </div>
-                  )}
-
-                  <div className={styles.field}>
-                    <label htmlFor="client">Cliente</label>
-                    <select id="client" name="client" defaultValue="" required>
-                      <option value="" disabled>
-                        Seleccionar cliente
-                      </option>
-                      {clientsMock.map((client) => (
-                        <option key={client}>{client}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className={styles.field}>
-                    <label htmlFor="seller">Vendedor</label>
-                    <select id="seller" name="seller" defaultValue="" required>
-                      <option value="" disabled>
-                        Seleccionar vendedor
-                      </option>
-                      {sellersMock.map((seller) => (
-                        <option key={seller}>{seller}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className={styles.field}>
-                    <label htmlFor="price">Precio de venta USD</label>
-                    <input
-                      id="price"
-                      name="price"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      required
-                      key={selectedUnit?.id}
-                      defaultValue={selectedUnit?.suggestedPriceUsd}
-                    />
-                  </div>
-
-                  <div className={styles.field}>
-                    <label htmlFor="commission">Comisión USD</label>
-                    <input
-                      id="commission"
-                      name="commission"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      required
-                      defaultValue="0"
-                    />
-                  </div>
-
-                  <div className={styles.field}>
-                    <label htmlFor="date">Fecha de venta</label>
-                    <input id="date" name="date" type="date" required defaultValue="2026-08-31" />
-                  </div>
-
-                  <div className={styles.field}>
-                    <label htmlFor="paid">Pago verificado</label>
-                    <div className={styles.check}>
-                      <input id="paid" name="paid" type="checkbox" defaultChecked />
-                      <span>La venta ya fue confirmada y cobrada.</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.actions}>
-                <button type="button" className={styles.cancel} onClick={requestClose}>
-                  Cancelar
-                </button>
-                <button type="submit" className={`primary-btn ${styles.save}`}>
-                  Guardar venta
-                </button>
-              </div>
-            </form>
-          </section>
-        </div>
-      )}
-    </div>
-  );
+  return <div className={`view ${layout.page}`}>
+    <PageHeader title="Ventas" action={<button className={`primary-btn ${styles.headAction}`} disabled={!available.length || !raw.clients.length || !raw.sellers.length} onClick={() => { setUnitId(String(available[0]?.databaseId ?? "")); requestId.current = crypto.randomUUID(); setCreating(true); setDirty(false); setError(""); }}><Plus size={16} /> Nueva venta</button>} />
+    {(!available.length || !raw.clients.length || !raw.sellers.length) && <p>Para vender necesitás unidades en Stock y al menos un cliente y un vendedor en Datos.</p>}
+    <div className={layout.toolbar}><label className={layout.searchWrap}><Search size={15} /><input className="search" aria-label="Buscar ventas" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar venta, cliente o unidad…" /></label><select className="filter" aria-label="Estado de venta" value={status} onChange={e => setStatus(e.target.value as typeof status)}><option value="TODOS">Todos los estados</option><option value="REPARTO">En reparto</option><option value="ENTREGADA">Entregada</option></select></div>
+    <section className="panel"><header className="panel-head"><div><span className="eyebrow">{formatDate(today)}</span><h2>Ventas de hoy</h2></div><span className="badge blue">{salesToday.length} ventas</span></header><div className="table-wrap">{table(salesToday)}</div></section>
+    <section className="panel"><header className="panel-head"><h2>Historial</h2><span className="badge muted-badge">{history.length} resultados</span></header><div className="table-wrap">{table(history)}</div></section>
+    {detail && !creating && <div className={styles.modalOverlay}><section className={styles.modal} role="dialog" aria-modal="true" aria-label={`Venta ${detail.id}`}><header className={styles.modalHeader}><h2>Venta #{detail.id}</h2><button className={styles.close} aria-label="Cerrar venta" disabled={busy} onClick={close}><X size={20} /></button></header>
+      <div className={styles.detailGrid}>{[["Cliente",detail.client],["Vendedor",detail.seller],["Fecha de venta",formatDate(detail.date)],["Producto",detail.product],["Unidad / serie",detail.unitId + " · " + (detail.code || "Sin código")],["Total",formatUsd(detail.priceUsd)],["Costo con envío",formatUsd(detail.costUsd)],["Comisión",formatUsd(detail.commissionUsd)],["Ganancia",formatUsd(detail.priceUsd-detail.costUsd-detail.commissionUsd)],["Estado",detail.status],["Pago",detail.paid ? "Verificado" : "Pendiente"],["Entrega",formatDate(detail.deliveredAt)]].map(([label,value]) => <div className={styles.detailItem} key={label}><small>{label}</small><strong>{value}</strong></div>)}</div>
+      <div className={styles.detailBody}>{error && <p role="alert" className="operation-error">{error}</p>}<button className={styles.cancel} disabled={busy} onClick={() => void run(() => runOperation("pgl_set_payment", { p_id: detail.id, p_paid: !detail.paid }))}>{detail.paid ? "Marcar pago pendiente" : "Verificar pago"}</button></div>
+    </section></div>}
+    {creating && <div className={styles.modalOverlay}><section className={styles.modal} role="dialog" aria-modal="true" aria-label="Registrar venta"><header className={styles.modalHeader}><h2>Registrar venta</h2><button className={styles.close} aria-label="Cerrar venta" disabled={busy} onClick={close}><X size={20} /></button></header><form onSubmit={create} onChange={() => setDirty(true)}><fieldset disabled={busy} className="form-fields"><div className={styles.form}><div className={styles.formGrid}>
+      <div className={`${styles.field} ${styles.wide}`}><label htmlFor="unit">Unidad disponible</label><select id="unit" value={unitId} onChange={e => setUnitId(e.target.value)} required><option value="" disabled>Seleccionar unidad</option>{available.map(unit => <option key={unit.id} value={unit.databaseId}>{unit.id} · {unit.product} · {unit.code || unit.color}</option>)}</select></div>
+      {selected && <div className={`${styles.unitPreview} ${styles.wide}`}><strong>{selected.product}</strong><small>{selected.variant} · {selected.color} · Costo con envío: {formatUsd(selected.costUsd)}</small></div>}
+      <div className={styles.field}><label htmlFor="client">Cliente</label><select id="client" name="client" required defaultValue=""><option value="" disabled>Seleccionar cliente</option>{raw.clients.map(client => <option key={client.id} value={client.id}>{client.nombre}</option>)}</select></div>
+      <div className={styles.field}><label htmlFor="seller">Vendedor</label><select id="seller" name="seller" required defaultValue=""><option value="" disabled>Seleccionar vendedor</option>{raw.sellers.map(seller => <option key={seller.id} value={seller.id}>{seller.nombre} · {seller.porcentaje_comision}%</option>)}</select></div>
+      <div className={styles.field}><label htmlFor="price">Precio de venta USD</label><input id="price" name="price" type="number" min="0" step="0.01" required key={unitId} defaultValue={selected?.salePriceUsd ?? ""} /></div>
+      <div className={styles.field}><label htmlFor="commission">Comisión USD</label><input id="commission" name="commission" type="number" min="0" step="0.01" required defaultValue="0" /></div>
+      <div className={styles.field}><label htmlFor="date">Fecha de venta</label><input id="date" name="date" type="date" required defaultValue={today} min={selected?.receivedAt} max={today} /></div>
+      <div className={styles.field}><label htmlFor="paid">Pago verificado</label><div className={styles.check}><input id="paid" name="paid" type="checkbox" /><span>Confirmar que el pago fue recibido.</span></div></div>
+    </div>{error && <p role="alert" className="operation-error">{error}</p>}<p>La unidad quedará reservada en Reparto hasta confirmar su entrega.</p></div><footer className={styles.actions}><button className={styles.cancel} type="button" onClick={close}>Cancelar</button><button className="primary-btn" type="submit">{busy ? "Guardando…" : "Guardar venta"}</button></footer></fieldset></form></section></div>}
+  </div>;
 }
