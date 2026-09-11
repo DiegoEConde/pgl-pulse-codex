@@ -1,5 +1,6 @@
 import type { Snapshot, PurchaseOrder, PurchaseStatus, Sale, StockUnit } from "@/types/operations";
 import type { AnalyticsRow } from "@/types/analytics";
+import { decodePurchaseDetails } from "./purchase-details";
 import { operationalDate } from "./dates";
 
 export function deriveOperations(data: Snapshot) {
@@ -9,14 +10,15 @@ export function deriveOperations(data: Snapshot) {
   const sellers = new Map(data.sellers.map(row => [row.id, row]));
   const ordersById = new Map(data.orders.map(row => [row.id, row]));
   const orders: PurchaseOrder[] = data.orders.map(order => {
-    const lines = data.lines.filter(line => line.pedido_id === order.id).map(line => ({ ...line, product: products.get(line.producto_id)?.nombre ?? "Producto no disponible" }));
+    const details = decodePurchaseDetails(order.observaciones);
+    const lines = data.lines.filter(line => line.pedido_id === order.id).map(line => ({ ...line, ram: details.lines.find(spec => spec.producto_id === line.producto_id && spec.color === line.color)?.ram ?? "", rom: details.lines.find(spec => spec.producto_id === line.producto_id && spec.color === line.color)?.rom ?? "", product: products.get(line.producto_id)?.nombre ?? "Producto no disponible" }));
     return { id: order.id, supplier: suppliers.get(order.proveedor_id)?.nombre ?? "—",
       date: order.fecha_pedido ? operationalDate(order.fecha_pedido) : "", expectedDate: order.fecha_estimada ?? "",
       units: lines.reduce((total, line) => total + line.cantidad, 0),
       receivedUnits: data.units.filter(unit => unit.pedido_id === order.id).length,
       status: order.estado as PurchaseStatus, products: lines.map(line => line.product),
       merchandiseUsd: lines.reduce((total, line) => total + line.cantidad * line.precio_costo_usd, 0),
-      shippingUsd: order.costo_envio_usd, notes: order.observaciones ?? undefined, closed: Boolean(order.cerrado_en), lines };
+      shippingUsd: order.costo_envio_usd, notes: details.notes || undefined, closed: Boolean(order.cerrado_en), lines };
   }).sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
   const stock: StockUnit[] = data.units.map(unit => {
     const product = products.get(unit.producto_id);

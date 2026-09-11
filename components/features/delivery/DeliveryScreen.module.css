@@ -1,0 +1,38 @@
+.board { display: grid; gap: 12px; min-width: 0; }
+.card { border: 1px solid var(--line); border-left: 3px solid #55b7ff; border-radius: 12px; background: var(--surface, #101922); overflow: hidden; min-width: 0; }
+.cardHeader { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 10px 16px; padding: 13px 16px 10px; background: linear-gradient(110deg,rgba(51,156,255,.07),transparent); }
+.identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.icon { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 9px; background: rgba(51,156,255,.12); color: #77c6ff; flex-shrink: 0; }
+.identity h2 { font-size: 17px; margin: 0 0 3px; overflow-wrap: anywhere; }
+.identity small, .item small { display: block; color: var(--muted); font-size: 10px; margin-top: 4px; }
+.schedule { display: flex; align-items: center; gap: 7px; align-self: center; color: #a5d9ff; font: 12px var(--font-mono); }
+.contact { grid-column: 1/-1; display: flex; flex-wrap: wrap; gap: 6px 22px; color: var(--muted); font-size: 11px; }
+.contact span { display: flex; gap: 6px; align-items: center; overflow-wrap: anywhere; }
+.contact svg { flex-shrink: 0; }
+.items { padding: 0 16px; }
+.item { display: grid; grid-template-columns: minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr); gap: 12px; align-items: center; min-height: 52px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 12px; overflow-wrap: anywhere; }
+.item strong { font-weight: 600; }
+.label { display: block; color: var(--muted); font-size: 9px; margin-bottom: 4px; }
+.price { text-align: right; }
+.price strong { color: #9fdbbd; font-family: var(--font-mono); }
+.cardFooter, .pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 10px; color: var(--muted); }
+.cardFooter { padding: 7px 16px; border-top: 1px solid var(--line); min-height: 33px; }
+.cardFooter > div, .pagination > div { display: flex; align-items: center; gap: 8px; }
+.cardFooter button, .pagination button { padding: 4px 8px; border: 1px solid var(--line); background: transparent; color: var(--text); border-radius: 5px; font-size: 10px; cursor: pointer; }
+.empty { border: 1px dashed var(--line); border-radius: 12px; padding: 45px 24px; text-align: center; color: var(--muted); }
+.empty svg { color: #77c6ff; }
+.empty h2 { color: var(--text); font-size: 20px; }
+.empty p { font-size: 13px; line-height: 1.6; }
+@media (max-width: 740px) {
+ .cardHeader { padding: 14px; grid-template-columns: 1fr; }
+ .contact { flex-direction: column; }
+ .schedule { padding-left: 44px; }
+ .items { padding: 0 14px; }
+ .item { grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; padding: 13px 0; }
+ .item > :first-child { grid-column: 1/-1; }
+ .price { grid-column: 1/-1; text-align: left; }
+}
+
+.generate { display: grid; justify-items: end; gap: 6px; }
+.generate > span { color: var(--muted); font-size: 12px; text-align: right; max-width: 260px; }
+.generate > span:empty { display: none; }

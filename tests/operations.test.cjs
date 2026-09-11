@@ -8,7 +8,7 @@ function load(file,deps={}) {
 }
 const dates=load("lib/dates.ts");
 const analytics=load("lib/analytics.ts");
-const operations=load("lib/operations.ts",{"./dates":dates});
+const operations=load("lib/operations.ts",{"./dates":dates, "./purchase-details":load("lib/purchase-details.ts")});
 test("La fecha operativa usa Buenos Aires incluso después de medianoche UTC",()=>{
  assert.equal(dates.operationalDate("2026-09-10T01:30:00Z"),"2026-09-09");
  assert.equal(dates.operationalDate("2026-09-10T03:00:00Z"),"2026-09-10");

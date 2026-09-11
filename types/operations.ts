@@ -1,6 +1,6 @@
 ﻿import type { Tables } from "@/lib/supabase/types";
 export type PurchaseStatus = "BORRADOR" | "PEDIDO" | "ENVÍO" | "RECIBIDO";
-export type PurchaseLine = Tables<"detalle_pedido"> & { product: string };
+export type PurchaseLine = Tables<"detalle_pedido"> & { product: string; ram: string; rom: string };
 export type PurchaseOrder = {
   id: number; supplier: string; date: string; expectedDate: string; units: number;
   receivedUnits: number; status: PurchaseStatus; products: string[]; merchandiseUsd: number;

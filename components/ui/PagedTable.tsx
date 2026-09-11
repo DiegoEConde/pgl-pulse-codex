@@ -15,12 +15,15 @@ export default function PagedTable({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
     const element = root.current;
     if (!element) return;
+    // Keep the tallest measured row for this dataset to avoid capacity oscillation.
+    let measuredRowHeight = 64;
     const resize = () => {
       if (window.innerWidth <= 740) { setCapacity(Math.max(rows.length, 1)); return; }
       const top = element.getBoundingClientRect().top;
       const head = element.querySelector("thead")?.getBoundingClientRect().height ?? 36;
       const rowHeights = [...element.querySelectorAll("tbody tr")].map(row => row.getBoundingClientRect().height);
-      const rowHeight = Math.max(64, ...rowHeights);
+      measuredRowHeight = Math.max(measuredRowHeight, ...rowHeights);
+      const rowHeight = measuredRowHeight;
       const available = window.innerHeight - top - head - 110;
       setCapacity(Math.max(1, Math.floor(available / rowHeight)));
     };
