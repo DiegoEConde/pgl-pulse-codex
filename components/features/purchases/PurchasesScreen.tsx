@@ -1,6 +1,8 @@
 "use client";
 import { useRef, useState, type FormEvent } from "react";
 import { Eye, Plus, Search, X } from "lucide-react";
+import WorkspaceTabs from "@/components/ui/WorkspaceTabs";
+import PagedTable from "@/components/ui/PagedTable";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
 import { useProgram } from "@/contexts/ProgramContext";
 import { useOperation } from "@/hooks/useOperation";
@@ -27,7 +29,7 @@ export default function PurchasesScreen() {
   const requestId = useRef("");
   const matches = (order: PurchaseOrder) => `${order.id} ${order.supplier} ${order.products.join(" ")}`.toLowerCase().includes(search.toLowerCase()) && (status === "TODOS" || order.status === status);
   const todayOrders = orders.filter(order => order.date === today && !order.closed && matches(order));
-  const history = orders.filter(order => (order.date !== today || order.closed) && matches(order)).slice(0, 10);
+  const history = orders.filter(order => (order.date !== today || order.closed) && matches(order));
   const receiptRows = detail?.lines.flatMap(line => Array.from({ length: line.cantidad }, (_, index) => ({ line, key: line.id + "-" + index }))) ?? [];
 
   function close() {
@@ -55,14 +57,15 @@ export default function PurchasesScreen() {
     void run(() => runOperation("pgl_receive_order", { p_id: detail.id, p_units: units }), () => { setReceiving(false); setDirty(false); });
   }
   function table(source: PurchaseOrder[], empty: string) {
-    return source.length ? <table><thead><tr><th>Pedido</th><th>Proveedor</th><th>Fecha</th><th>Estado</th><th>Total</th><th></th></tr></thead><tbody>{source.map(order => <tr key={order.id} onClick={() => { setDetailId(order.id); setError(""); }}><td className="mono">#{order.id}</td><td>{order.supplier}</td><td>{formatDate(order.date)}</td><td><span className={`badge ${statusClass[order.status]}`}>{order.status}</span></td><td>{formatUsd(order.merchandiseUsd + order.shippingUsd)}</td><td><button className={styles.tableButton} aria-label={`Ver pedido ${order.id}`}><Eye size={14} /> Ver</button></td></tr>)}</tbody></table> : <div className={styles.empty}>{empty}</div>;
+    return source.length ? <PagedTable><thead><tr><th>Pedido</th><th>Proveedor</th><th>Fecha</th><th>Estado</th><th>Total</th><th></th></tr></thead><tbody>{source.map(order => <tr key={order.id} onClick={() => { setDetailId(order.id); setError(""); }}><td className="mono">#{order.id}</td><td>{order.supplier}</td><td>{formatDate(order.date)}</td><td><span className={`badge ${statusClass[order.status]}`}>{order.status}</span></td><td>{formatUsd(order.merchandiseUsd + order.shippingUsd)}</td><td><button className={styles.tableButton} aria-label={`Ver pedido ${order.id}`}><Eye size={14} /> Ver</button></td></tr>)}</tbody></PagedTable> : <div className={styles.empty}>{empty}</div>;
   }
   return <div className={`view ${layout.page}`}>
     <PageHeader title="Compras" action={<button className={`primary-btn ${styles.headAction}`} disabled={!raw.products.length || !raw.suppliers.length} onClick={() => { requestId.current = crypto.randomUUID(); setLineKeys([++lineCounter.current]); setCreating(true); setDirty(false); setError(""); }}><Plus size={16} /> Nueva compra</button>} />
     {(!raw.products.length || !raw.suppliers.length) && <p>Creá al menos un producto y un proveedor en Datos para registrar compras.</p>}
     <div className={layout.toolbar}><label className={layout.searchWrap}><Search size={15} /><input className="search" aria-label="Buscar compras" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar pedido, proveedor o producto…" /></label><select className="filter" aria-label="Estado de compra" value={status} onChange={e => setStatus(e.target.value as typeof status)}><option value="TODOS">Todos los estados</option>{Object.keys(statusClass).map(value => <option key={value}>{value}</option>)}</select></div>
-    <section className="panel"><header className="panel-head"><div><span className="eyebrow">Operación del día · {formatDate(today)}</span><h2>Pedidos de hoy</h2></div><span className="badge blue">{todayOrders.length} pedidos</span></header><div className="table-wrap">{table(todayOrders, "No hay pedidos abiertos para hoy.")}</div></section>
+    <WorkspaceTabs labels={["Pedidos de hoy", "Historial"]}>    <section className="panel"><header className="panel-head"><div><span className="eyebrow">Operación del día · {formatDate(today)}</span><h2>Pedidos de hoy</h2></div><span className="badge blue">{todayOrders.length} pedidos</span></header><div className="table-wrap">{table(todayOrders, "No hay pedidos abiertos para hoy.")}</div></section>
     <section className="panel"><header className="panel-head"><h2>Historial</h2><span className="badge muted-badge">{history.length} resultados</span></header><div className="table-wrap">{table(history, "No hay pedidos que coincidan con la búsqueda.")}</div></section>
+    </WorkspaceTabs>
     {detail && !creating && <div className={styles.modalOverlay}><section className={styles.modal} role="dialog" aria-modal="true" aria-label={`Pedido ${detail.id}`}>
       <header className={styles.modalHeader}><h2>Pedido #{detail.id}</h2><button className={styles.close} aria-label="Cerrar detalle" disabled={busy} onClick={close}><X size={20} /></button></header>
       <div className={styles.detailGrid}>{[["Proveedor", detail.supplier], ["Estado", detail.status], ["Recepción estimada", formatDate(detail.expectedDate)], ["Mercadería", formatUsd(detail.merchandiseUsd)], ["Envío", formatUsd(detail.shippingUsd)], ["Total", formatUsd(detail.merchandiseUsd + detail.shippingUsd)]].map(([label,value]) => <div className={styles.detailItem} key={label}><small>{label}</small><strong>{value}</strong></div>)}</div>

@@ -1,5 +1,5 @@
 .page { display: grid; gap: 18px; min-width: 0; }
-.page > :global(.page-head) { min-height: 96px; margin: 0; align-items: center; }
+.page > :global(.page-head) { margin: 0; align-items: center; }
 .page > :global(.page-head) h1 { margin: 0; }
 .page > :global(.panel) { margin: 0; min-width: 0; padding: 24px; }
 .page > :global(.panel) > :global(.panel-head) { min-height: 44px; margin-bottom: 20px; }
@@ -9,7 +9,7 @@
 .searchWrap svg { position: absolute; left: 13px; top: 50%; color: var(--dim); transform: translateY(-50%); }
 .searchWrap input { width: 100%; min-width: 0; padding-left: 39px; }
 @media (max-width: 680px) {
-  .page > :global(.page-head) { min-height: 148px; gap: 16px; align-items: flex-start; justify-content: space-between; }
+  .page > :global(.page-head) { gap: 16px; align-items: flex-start; justify-content: space-between; }
   .page > :global(.panel) { padding: 18px; }
   .toolbar { align-items: stretch; flex-direction: column; }
   .searchWrap { flex: none; width: 100%; max-width: none; }
@@ -19,3 +19,6 @@
 .total strong { color: #b8eaff; font: 700 clamp(36px, 4vw, 52px)/1 var(--font-mono); text-shadow: 0 0 10px rgba(88,170,255,.8), 0 0 28px rgba(51,156,255,.45); }
 .total span { color: #83bded; font: 10px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
 @media (max-width: 680px) { .total { padding: 8px 12px; } .total span { font-size: 9px; letter-spacing: .06em; } }
+
+.page > p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.page > :global(.operation-error) { color: var(--red); }

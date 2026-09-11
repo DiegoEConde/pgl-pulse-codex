@@ -111,6 +111,7 @@ async function snapshot() { const { data, error } = await supabase.rpc("pgl_snap
     await row.getByRole("button",{name:"Verificar pago",exact:true}).waitFor({state:"detached"});
     await row.getByRole("button",{name:"Confirmar entrega",exact:true}).click();
     await row.waitFor({state:"detached"});
+    await page.getByRole("tab",{name:"Cierre del día",exact:true}).click();
     await page.getByRole("button",{name:"Finalizar pedidos del día",exact:true}).click();
     await page.getByRole("button",{name:"Finalizar pedidos del día",exact:true}).waitFor({state:"visible"});
     // Wait for the write and refresh, then assert the durable state.
@@ -123,10 +124,13 @@ async function snapshot() { const { data, error } = await supabase.rpc("pgl_snap
     result.steps.push("Venta, salida de Stock, pago, entrega y cierre persistidos");
     await nav("Reportes");
     assert.equal(await page.getByText("NaN%",{exact:true}).count(),0);
+    await page.getByRole("tab",{name:"Constructor",exact:true}).click();
     const title=page.locator('input').first();
     await title.fill(prefix+" Informe");
     await page.getByRole("button",{name:"Agregar al Dashboard",exact:true}).first().click();
+    await page.getByRole("tab",{name:"Guardados",exact:true}).click();
     await page.getByText(prefix+" Informe",{exact:true}).last().waitFor();
+    await page.getByRole("tab",{name:"Constructor",exact:true}).click();
     const download=page.waitForEvent("download");
     await page.getByRole("button",{name:"Exportar CSV",exact:true}).click();
     const file=await download;
@@ -136,8 +140,11 @@ async function snapshot() { const { data, error } = await supabase.rpc("pgl_snap
     const chart=data.charts.find(row=>row.title===prefix+" Informe");
     assert.ok(chart); result.ids.chart=chart.id;
     await page.reload({waitUntil:"networkidle"});
+    await nav("Reportes");
+    await page.getByRole("tab",{name:"Guardados",exact:true}).click();
     await page.getByText(prefix+" Informe",{exact:true}).waitFor();
     await nav("Compras");
+    await page.getByRole("tab",{name:"Historial",exact:true}).click();
     await page.getByRole("button",{name:"Ver pedido "+order.id,exact:true}).waitFor();
     result.steps.push("Reportes reales, CSV escapado y persistencia tras recargar");
     await page.setViewportSize({width:390,height:844});

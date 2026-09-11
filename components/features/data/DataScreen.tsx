@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { ArrowLeft, Boxes, Building2, Pencil, Plus, Search, Store, UsersRound, X, type LucideIcon } from "lucide-react";
+import PagedTable from "@/components/ui/PagedTable";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
 import { catalogConfig, type CatalogId, type MasterRecord } from "@/config/catalogs";
 import { persistRecord, catalogError } from "@/lib/supabase/catalogs";
@@ -25,7 +26,7 @@ export default function DataScreen() {
 
   const filtered = useMemo(() => {
     const records = activeCatalog ? catalogs[activeCatalog] : [];
-    return records.filter((record) => Object.values(record).filter((value) => value !== null).join(" ").toLowerCase().includes(search.trim().toLowerCase())).sort((a, b) => b.id - a.id).slice(0, 10);
+    return records.filter((record) => Object.values(record).filter((value) => value !== null).join(" ").toLowerCase().includes(search.trim().toLowerCase())).sort((a, b) => b.id - a.id);
   }, [activeCatalog, catalogs, search]);
 
   function openCatalog(id: CatalogId) { setActiveCatalog(id); setSearch(""); }
@@ -77,7 +78,7 @@ export default function DataScreen() {
     </div>
     <section className="panel">
       <div className="table-wrap">
-        {filtered.length ? <table>
+        {filtered.length ? <PagedTable>
           <thead><tr><th>ID</th>{config.fields.map((field) => <th key={field.key}>{field.label}</th>)}<th>Acciones</th></tr></thead>
           <tbody>{filtered.map((record) => <tr key={record.id}>
             <td className="mono">{record.id}</td>
@@ -86,7 +87,7 @@ export default function DataScreen() {
             </td>)}
             <td><button className={styles.rowAction} onClick={() => { setEditing(record); setDirty(false); setFormError(""); }}><Pencil size={13} /> Modificar</button></td>
           </tr>)}</tbody>
-        </table> : <div className={styles.empty}>No hay registros que coincidan con la búsqueda.</div>}
+        </PagedTable> : <div className={styles.empty}>No hay registros que coincidan con la búsqueda.</div>}
       </div>
     </section>
 

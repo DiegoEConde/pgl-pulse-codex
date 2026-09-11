@@ -1,6 +1,8 @@
 "use client";
 import { useRef, useState, type FormEvent } from "react";
 import { Eye, Plus, Search, X } from "lucide-react";
+import WorkspaceTabs from "@/components/ui/WorkspaceTabs";
+import PagedTable from "@/components/ui/PagedTable";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
 import { useProgram } from "@/contexts/ProgramContext";
 import { useOperation } from "@/hooks/useOperation";
@@ -26,7 +28,7 @@ export default function SalesScreen() {
   const requestId = useRef("");
   const matches = (sale: Sale) => `${sale.id} ${sale.product} ${sale.code} ${sale.client} ${sale.seller}`.toLowerCase().includes(search.toLowerCase()) && (status === "TODOS" || sale.status === status);
   const salesToday = sales.filter(sale => sale.date === today && matches(sale));
-  const history = sales.filter(sale => sale.date !== today && matches(sale)).slice(0,10);
+  const history = sales.filter(sale => sale.date !== today && matches(sale));
   function close() {
     if (busy) return;
     if (dirty && !window.confirm("Hay cambios sin guardar. ¿Querés descartarlos?")) return;
@@ -41,14 +43,15 @@ export default function SalesScreen() {
     }), id => { setCreating(false); setDirty(false); setDetailId(Number(id)); });
   }
   function table(source: Sale[]) {
-    return source.length ? <table><thead><tr><th>Venta / unidad</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th>Total</th><th>Pago</th><th></th></tr></thead><tbody>{source.map(sale => <tr key={sale.id} onClick={() => { setDetailId(sale.id); setError(""); }}><td className="mono">#{sale.id}</td><td>{sale.client}</td><td>{formatDate(sale.date)}</td><td><span className={`badge ${sale.status === "ENTREGADA" ? "green" : "violet"}`}>{sale.status === "ENTREGADA" ? "Entregada" : "En reparto"}</span></td><td>{formatUsd(sale.priceUsd)}</td><td>{sale.paid ? "Verificado" : "Pendiente"}</td><td><button className={styles.rowAction} aria-label={`Ver venta ${sale.id}`}><Eye size={14} /> Ver</button></td></tr>)}</tbody></table> : <div className={styles.empty}>No hay ventas que coincidan con esta búsqueda.</div>;
+    return source.length ? <PagedTable><thead><tr><th>Venta / unidad</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th>Total</th><th>Pago</th><th></th></tr></thead><tbody>{source.map(sale => <tr key={sale.id} onClick={() => { setDetailId(sale.id); setError(""); }}><td className="mono">#{sale.id}</td><td>{sale.client}</td><td>{formatDate(sale.date)}</td><td><span className={`badge ${sale.status === "ENTREGADA" ? "green" : "violet"}`}>{sale.status === "ENTREGADA" ? "Entregada" : "En reparto"}</span></td><td>{formatUsd(sale.priceUsd)}</td><td>{sale.paid ? "Verificado" : "Pendiente"}</td><td><button className={styles.rowAction} aria-label={`Ver venta ${sale.id}`}><Eye size={14} /> Ver</button></td></tr>)}</tbody></PagedTable> : <div className={styles.empty}>No hay ventas que coincidan con esta búsqueda.</div>;
   }
   return <div className={`view ${layout.page}`}>
     <PageHeader title="Ventas" action={<button className={`primary-btn ${styles.headAction}`} disabled={!available.length || !raw.clients.length || !raw.sellers.length} onClick={() => { setUnitId(String(available[0]?.databaseId ?? "")); requestId.current = crypto.randomUUID(); setCreating(true); setDirty(false); setError(""); }}><Plus size={16} /> Nueva venta</button>} />
     {(!available.length || !raw.clients.length || !raw.sellers.length) && <p>Para vender necesitás unidades en Stock y al menos un cliente y un vendedor en Datos.</p>}
     <div className={layout.toolbar}><label className={layout.searchWrap}><Search size={15} /><input className="search" aria-label="Buscar ventas" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar venta, cliente o unidad…" /></label><select className="filter" aria-label="Estado de venta" value={status} onChange={e => setStatus(e.target.value as typeof status)}><option value="TODOS">Todos los estados</option><option value="REPARTO">En reparto</option><option value="ENTREGADA">Entregada</option></select></div>
-    <section className="panel"><header className="panel-head"><div><span className="eyebrow">{formatDate(today)}</span><h2>Ventas de hoy</h2></div><span className="badge blue">{salesToday.length} ventas</span></header><div className="table-wrap">{table(salesToday)}</div></section>
+    <WorkspaceTabs labels={["Ventas de hoy", "Historial"]}>    <section className="panel"><header className="panel-head"><div><span className="eyebrow">{formatDate(today)}</span><h2>Ventas de hoy</h2></div><span className="badge blue">{salesToday.length} ventas</span></header><div className="table-wrap">{table(salesToday)}</div></section>
     <section className="panel"><header className="panel-head"><h2>Historial</h2><span className="badge muted-badge">{history.length} resultados</span></header><div className="table-wrap">{table(history)}</div></section>
+    </WorkspaceTabs>
     {detail && !creating && <div className={styles.modalOverlay}><section className={styles.modal} role="dialog" aria-modal="true" aria-label={`Venta ${detail.id}`}><header className={styles.modalHeader}><h2>Venta #{detail.id}</h2><button className={styles.close} aria-label="Cerrar venta" disabled={busy} onClick={close}><X size={20} /></button></header>
       <div className={styles.detailGrid}>{[["Cliente",detail.client],["Vendedor",detail.seller],["Fecha de venta",formatDate(detail.date)],["Producto",detail.product],["Unidad / serie",detail.unitId + " · " + (detail.code || "Sin código")],["Total",formatUsd(detail.priceUsd)],["Costo con envío",formatUsd(detail.costUsd)],["Comisión",formatUsd(detail.commissionUsd)],["Ganancia",formatUsd(detail.priceUsd-detail.costUsd-detail.commissionUsd)],["Estado",detail.status],["Pago",detail.paid ? "Verificado" : "Pendiente"],["Entrega",formatDate(detail.deliveredAt)]].map(([label,value]) => <div className={styles.detailItem} key={label}><small>{label}</small><strong>{value}</strong></div>)}</div>
       <div className={styles.detailBody}>{error && <p role="alert" className="operation-error">{error}</p>}<button className={styles.cancel} disabled={busy} onClick={() => void run(() => runOperation("pgl_set_payment", { p_id: detail.id, p_paid: !detail.paid }))}>{detail.paid ? "Marcar pago pendiente" : "Verificar pago"}</button></div>

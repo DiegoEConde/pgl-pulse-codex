@@ -56,3 +56,5 @@
 
 
 .formFields { border: 0; padding: 0; margin: 0; min-width: 0; }
+
+@media (min-width: 741px) { .catalogCard { min-height: 0; padding: 18px; } .catalogCard h2 { font-size: 20px; } .cardHeading { margin-bottom: 12px; } .cardFooter { padding-top: 14px; } .searchSection { grid-template-columns: auto minmax(0, 1fr); align-items: center; } }

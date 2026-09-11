@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
+import PagedTable from "@/components/ui/PagedTable";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
 import { formatUsd } from "@/lib/formatters";
 import { useProgram } from "@/contexts/ProgramContext";
@@ -107,7 +108,7 @@ export default function StockScreen() {
         </header>
         <div className="table-wrap">
           {filtered.length ? (
-            <table>
+            <PagedTable>
               <thead>
                 <tr>
                   <th>Código</th>
@@ -140,7 +141,7 @@ export default function StockScreen() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </PagedTable>
           ) : (
             <div className={styles.empty}>
               No hay unidades que coincidan con los filtros.
