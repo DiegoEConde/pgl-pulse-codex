@@ -213,3 +213,25 @@ Sprint iniciado. Base: commit 7b9bf52, cierre del sprint Stock.
 - Validaciones: TypeScript y ESLint sin errores (tres advertencias previas de imports sin uso en Compras/Ventas). Pruebas con Edge de altas, edicion, campos SQL, navegacion, intro y adaptacion movil.
 - Se cierra la jornada con commit y publicacion en GitHub.
 - Proxima sesion: activar y coordinar la base de datos. Reparto queda despues de esa integracion.
+
+## Cierre de sesión — 2026-09-11
+
+Reportes queda guardado para continuar su revisión visual y funcional con el usuario; no se declara aprobado definitivamente. El próximo paso es retomar esta pantalla desde el estado documentado en [REPORTES.md](REPORTES.md), sin rehacer la integración.
+
+- Repartos cerrado y subido a GitHub en 8fd2d88. Exportación WhatsApp y contactos ficticios documentados en REPARTO.md.
+- Reportes: cuatro KPI, torta, top 5, personalizados, PDF y resumen de vendedores implementados.
+- Última corrección: más espacio bajo el título; selectores de día, mes, mes final del semestre y año. Semestre móvil = mes elegido más cinco anteriores, incluso cruzando de año.
+- Preferencias confirmadas: compras confirmadas, incluidos pendientes de recepción; ranking de vendedores por ganancia neta generada.
+- Mantener estética y espaciados compartidos. Las explicaciones operativas van a una futura Ayuda.
+- Mantener los informes actualizados al cerrar cada sesión o sprint, por instrucción del usuario.
+- No se modificó el esquema remoto ni se crearon movimientos reales en las pruebas de Reportes.
+- Pendientes conocidos: actualizar el test de integración antiguo a las interfaces definitivas; mantenimiento de dependencias señalado en REPORTES.md.
+- Este cierre solicita commit local; no se solicita un nuevo push.
+
+## Cierre técnico de Reportes — 2026-09-12
+
+- Se retoma y completa el chequeo pendiente del último ajuste de selectores.
+- Aprobados: 14 tests de lógica, lint, TypeScript, build de producción, navegador de Reportes y regresión responsive global (siete pantallas, seis resoluciones).
+- PDF y capturas regenerados con datos simulados; sin cambios en la base remota.
+- Implementación, documentación y pruebas preparadas para commit local, según lo solicitado. Sin push ni despliegue.
+- Sigue pendiente la revisión visual con el usuario; mantenimiento de dependencias y adaptación del test histórico de integración conservan su alcance separado.

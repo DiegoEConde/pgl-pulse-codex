@@ -1,8 +1,21 @@
-﻿# Integración con Supabase — revisión 2026-09-10
+# Integración con Supabase — estado y revisiones
 
 Proyecto: `hxoofxapwgebihkyuvrv`.
 
-## Estado actual
+## Estado vigente — 2026-09-12
+
+La integración con Supabase sigue operativa. Las validaciones detalladas más abajo corresponden al 10 de septiembre y son históricas; no describen todas las pantallas actuales.
+
+- Repartos cerrado y publicado en GitHub hasta el commit 8fd2d88. Estado y reglas: [REPARTO.md](REPARTO.md).
+- Reportes implementado, con cierre técnico validado el 12 de septiembre y revisión visual pendiente con el usuario: [REPORTES.md](REPORTES.md). Incluye selectores históricos, semestre móvil, PDF y resumen de vendedores.
+- Catálogos de prueba cargados: Jacinto (15–16), Roman (14–16), Anselmo (10–20), con contactos ficticios; iPhone 15, Galaxy A55, Edge 50 y Redmi Note 13. La limpieza de tablas documentada más abajo ocurrió antes de esa carga; no implica que la base esté vacía actualmente.
+- No hubo nuevas migraciones en estos sprints. RAM/ROM de compras se guardan mediante la compatibilidad documentada en REPARTO.md.
+- Las acciones de pago/entrega/cierre conservan sus funciones remotas, pero sus antiguos controles ya no están en Repartos. tests/integration.browser.cjs necesita adaptarse antes de volver a validar el circuito completo actual.
+- Próxima sesión: continuar la revisión de Reportes. Resumen de cierre en [historico-proyecto.md](historico-proyecto.md).
+
+## Revisión histórica — 2026-09-10
+
+## Estado en la revisión original
 
 La integración operativa está implementada y validada. Este documento reemplaza el estado anterior, que solo describía catálogos con inicio de sesión.
 

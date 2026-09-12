@@ -1,35 +1,114 @@
 "use client";
-import { useMemo, useState } from "react";
-import { BarChart3, CircleDollarSign, Download, Info, LayoutDashboard, PackageCheck, Save, Trash2, TrendingUp } from "lucide-react";
-import AnalyticsChart from "@/components/ui/AnalyticsChart/AnalyticsChart";
+import { useMemo, useState, type FormEvent } from "react";
+import { Banknote, Boxes, CircleDollarSign, Download, FileSliders, TrendingUp, UsersRound } from "lucide-react";
 import MetricCard from "@/components/ui/MetricCard/MetricCard";
-import WorkspaceTabs from "@/components/ui/WorkspaceTabs";
-import PagedTable from "@/components/ui/PagedTable";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
-import { useAnalytics } from "@/contexts/AnalyticsContext";
-import { aggregate, dimensionLabels, filterAnalytics, formatMetric, metricLabels } from "@/lib/analytics";
 import { useProgram } from "@/contexts/ProgramContext";
-import type { ChartType, Dimension, Metric, ReportConfig } from "@/types/analytics";
+import { formatUsd } from "@/lib/formatters";
+import { formatDate } from "@/lib/dates";
+import { reportFacts, periodRange, makeReport, reportSlices, expensiveProducts, productiveSellers, periodLabels, pieLabels, type Period, type PieMode, type RankingMode, type ReportFilter, type Report } from "@/lib/reports";
+import { exportReportPdf } from "@/lib/report-pdf";
+import ReportPie from "./ReportPie";
+import ReportModal from "./ReportModal";
+import layout from "@/components/ui/OperationalLayout.module.css";
 import styles from "./ReportsScreen.module.css";
 
-const initial:ReportConfig={id:"builder",title:"Ventas por categoría",dimension:"category",metric:"sales",chartType:"bar",state:"TODOS"};
-export default function ReportsScreen(){
- const [config,setConfig]=useState(initial);const {charts,addChart,removeChart,busy,error}=useAnalytics(); const {analytics}=useProgram();
- const data=useMemo(()=>aggregate(analytics,config),[analytics,config]);const rows=useMemo(()=>filterAnalytics(analytics,config),[analytics,config]);
- const sold=rows.filter(r=>r.state==="REPARTO"||r.state==="ENTREGADA");
- const revenue=sold.reduce((s,r)=>s+r.sale,0),cost=sold.reduce((s,r)=>s+r.cost,0),commission=sold.reduce((s,r)=>s+r.commission,0),profit=revenue-cost-commission;
- const update=<K extends keyof ReportConfig>(key:K,value:ReportConfig[K])=>setConfig((old)=>({...old,[key]:value}));
- function exportCsv(){
-   const cell=(value:string|number)=>{const text=String(value);const safe=typeof value==="string"&&/^[=+@\\-\\t\\r]/.test(text)?"'"+text:text;return '"'+safe.replaceAll('"','""')+'"';};
-   const head=["Unidad","Fecha","Estado","Producto","Marca","Cliente","Vendedor","Costo","Venta","Comision","Pago"].map(cell).join(",");
-   const body=rows.map(r=>[r.id,r.date,r.state,r.product,r.brand,r.client,r.seller,r.cost,r.sale,r.commission,r.paid?"Sí":"No"].map(cell).join(",")).join("\r\n");
-   const url=URL.createObjectURL(new Blob(["\uFEFF"+head+"\r\n"+body],{type:"text/csv;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download="pgl-pulse-reporte.csv";a.click();URL.revokeObjectURL(url);
+function Metrics({report}:{report:Report}) {
+ return <div className={styles.kpis}>
+  <MetricCard label="Costo total" value={formatUsd(report.cost)} icon={<Banknote size={17}/>}/>
+  <MetricCard label="Unidades compradas" value={String(report.units)} icon={<Boxes size={17}/>} color="var(--cyan)"/>
+  <MetricCard label="Total de ventas" value={formatUsd(report.revenue)} icon={<CircleDollarSign size={17}/>} color="var(--violet)"/>
+  <MetricCard label="Ganancia" value={formatUsd(report.profit)} icon={<TrendingUp size={17}/>} color="var(--green)"/>
+ </div>;
+}
+function Charts({report,pie,ranking,top,onPie,onRanking}:{report:Report;pie:PieMode;ranking:RankingMode;top:boolean;onPie:(mode:PieMode)=>void;onRanking:(mode:RankingMode)=>void}) {
+ const slices=reportSlices(report,pie,top);
+ const expensive=expensiveProducts(report),sellers=productiveSellers(report);
+ return <div className={styles.charts}>
+  <section className={`panel ${styles.chartPanel}`}><header className={styles.panelHead}><h2>{top?"Top 10":"Distribución"} · {pieLabels[pie]}</h2><select className="filter" aria-label="Distribución por" value={pie} onChange={e=>onPie(e.target.value as PieMode)}><option value="products">Unidades</option><option value="clients">Clientes</option><option value="suppliers">Proveedores</option></select></header><ReportPie data={slices}/></section>
+  <section className={`panel ${styles.chartPanel}`}><header className={styles.panelHead}><h2>Top 5</h2><select className="filter" aria-label="Ranking de" value={ranking} onChange={e=>onRanking(e.target.value as RankingMode)}><option value="products">Dispositivos más caros</option><option value="sellers">Vendedores por ganancia</option></select></header>
+  <ol className={styles.ranking}>{ranking==="products"?expensive.map((r,i)=><li key={r.productId}><span className={styles.place}>{i+1}</span><div><strong>{r.product}</strong><small>{r.supplier}</small></div><b>{formatUsd(r.unitCost)}</b></li>):sellers.map((r,i)=><li key={String(r.id)}><span className={styles.place}>{i+1}</span><div><strong>{r.name}</strong><small>{r.units} ventas</small></div><b>{formatUsd(r.profit)}</b></li>)}</ol>
+  {!(ranking==="products"?expensive:sellers).length&&<div className={styles.empty}>Sin movimientos en este período.</div>}
+  </section>
+ </div>;
+}
+function SalesDetail({report}:{report:Report}) {
+ return <div className={styles.detailList}>{report.sales.length?report.sales.map(row=><article key={row.id}><div><strong>{row.product}</strong><small>#{row.id} · {formatDate(row.date)} · {row.client}</small></div><dl><div><dt>Venta</dt><dd>{formatUsd(row.revenue)}</dd></div><div><dt>Costo</dt><dd>{formatUsd(row.cost)}</dd></div><div><dt>Comisión</dt><dd>{formatUsd(row.commission)}</dd></div><div><dt>Ganancia</dt><dd>{formatUsd(row.profit)}</dd></div><div><dt>Pago</dt><dd>{row.paid?"Verificado":"Pendiente"}</dd></div><div><dt>Estado</dt><dd>{row.state==="ENTREGADA"?"Entregada":"En reparto"}</dd></div></dl></article>):<p className={styles.empty}>Sin ventas en este período.</p>}</div>;
+}
+export default function ReportsScreen() {
+ const {raw,today,loading}=useProgram();
+ const [period,setPeriod]=useState<Period>("today");
+ const [pie,setPie]=useState<PieMode>("products");
+ const [ranking,setRanking]=useState<RankingMode>("products");
+ const [modal,setModal]=useState<"custom"|"result"|"sellers"|null>(null);
+ const [scope,setScope]=useState<"both"|"purchases"|"sales">("both");
+ const [custom,setCustom]=useState<{title:string;filter:ReportFilter;details:boolean;pie:PieMode;ranking:RankingMode}|null>(null);
+ const [sellerId,setSellerId]=useState("");
+ const [error,setError]=useState("");
+ const [exporting,setExporting]=useState(false);
+ const facts=useMemo(()=>reportFacts(raw),[raw]);
+ const [selection,setSelection]=useState<Partial<Record<Period,string>>>({});
+ const earliestYear=Math.min(Number(today.slice(0,4))-10,...[...facts.purchases,...facts.sales].filter(r=>r.date).map(r=>Number(r.date.slice(0,4))));
+ const years=Array.from({length:Number(today.slice(0,4))-earliestYear+1},(_,index)=>String(Number(today.slice(0,4))-index));
+ const range=periodRange(period,today,selection[period]);
+ const report=makeReport(facts,range);
+ const customReport=custom?makeReport(facts,custom.filter):null;
+ const seller=raw.sellers.find(s=>String(s.id)===sellerId);
+ const sellerReport=makeReport(facts,{...range,scope:"sales",seller:sellerId});
+ const close=()=>{setModal(null);setError("");};
+ async function download(value:Report,title:string,pieMode:PieMode,rank:RankingMode,top:boolean,details=false) {
+  setExporting(true);setError("");
+  try {await exportReportPdf(value,title,pieMode,rank,top,details);}
+  catch {setError("No se pudo exportar el PDF. Volvé a intentar.");}
+  finally {setExporting(false);}
  }
-
- return <div className={`view ${styles.page}`}><PageHeader eyebrow="Explorador analítico" title="Reportes" description="Combiná dimensiones, métricas y estados para responder preguntas operativas." action={<button className={`primary-btn ${styles.headAction}`} disabled={busy || !config.title.trim() || config.title.length>150} onClick={()=>void addChart(config)}><LayoutDashboard size={15}/> Agregar al Dashboard</button>}/>
- {error&&<p role="alert" className="operation-error">{error}</p>}<WorkspaceTabs labels={["Resumen", "Constructor", "Detalle", "Guardados"]}><section className={styles.kpis}><MetricCard label="Facturación" value={formatMetric(revenue,"sales")} detail="Ventas del filtro seleccionado" icon={<CircleDollarSign size={17}/>}/><MetricCard label="Ganancia" value={formatMetric(profit,"profit")} detail="Luego de costos y comisiones" icon={<TrendingUp size={17}/>} color="var(--green)"/><MetricCard label="Unidades" value={String(rows.length)} detail="Trazabilidad total" icon={<PackageCheck size={17}/>} color="var(--cyan)"/><MetricCard label="Pagos verificados" value={`${(sold.length ? Math.round(sold.filter(r=>r.paid).length/sold.length*100) : 0)}%`} detail="Sobre las ventas del filtro" icon={<BarChart3 size={17}/>} color="var(--violet)"/></section>
- <section className={styles.builder}><aside className={`panel ${styles.controls}`}><div><span className="eyebrow">Constructor</span><h2 style={{margin:"5px 0 0",fontSize:17}}>Configurar informe</h2></div><div className={styles.control}><label>Título</label><input value={config.title} onChange={e=>update("title",e.target.value)}/></div><div className={styles.controlRow}><div className={styles.control}><label>Agrupar por</label><select value={config.dimension} onChange={e=>update("dimension",e.target.value as Dimension)}>{Object.entries(dimensionLabels).map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></div><div className={styles.control}><label>Métrica</label><select value={config.metric} onChange={e=>update("metric",e.target.value as Metric)}>{Object.entries(metricLabels).map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></div></div><div className={styles.controlRow}><div className={styles.control}><label>Estado</label><select value={config.state} onChange={e=>update("state",e.target.value)}><option value="TODOS">Todos</option><option>RETIRADO</option><option>STOCK</option><option>REPARTO</option><option>ENTREGADA</option></select></div><div className={styles.control}><label>Visualización</label><select value={config.chartType} onChange={e=>update("chartType",e.target.value as ChartType)}><option value="bar">Barras</option><option value="line">Línea</option><option value="donut">Dona</option></select></div></div><button className={`primary-btn ${styles.save}`} disabled={busy || !config.title.trim() || config.title.length>150} onClick={()=>void addChart(config)}><Save size={14}/> Agregar al Dashboard</button><div className={styles.hint}><Info size={14}/> Datos de Supabase. Los importes de venta y ganancia corresponden a unidades vendidas; el costo incluye el envío.</div></aside>
- <article className={`panel ${styles.preview}`}><header className={styles.previewHead}><div><span className="eyebrow">Vista previa · {rows.length} unidades</span><h2>{config.title}</h2></div><div className={styles.previewActions}><button className={styles.iconButton} onClick={exportCsv}><Download size={14}/> Exportar CSV</button></div></header><AnalyticsChart data={data} type={config.chartType} metric={config.metric}/></article></section>
- <section className="panel"><header className="panel-head"><div><span className="eyebrow">Detalle consultable</span><h2>Unidades del informe</h2></div><span className="badge blue">{rows.length} resultados</span></header><div className={`table-wrap ${styles.detailTable}`}><PagedTable><thead><tr><th>Unidad</th><th>Fecha</th><th>Estado</th><th>Producto</th><th>Cliente</th><th>Vendedor</th><th>Costo</th><th>Venta</th><th>Pago</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}><td className="mono">{r.id}</td><td>{r.date}</td><td><span className={`badge ${r.state==="ENTREGADA"?"green":r.state==="STOCK"?"blue":"violet"}`}>{r.state}</span></td><td className="product-cell"><strong>{r.product}</strong><small>{r.brand} · {r.category}</small></td><td>{r.client}</td><td>{r.seller}</td><td>{formatMetric(r.cost,"cost")}</td><td>{formatMetric(r.sale,"sales")}</td><td>{r.paid?"Sí":"No"}</td></tr>)}</tbody></PagedTable></div></section>
- <section className={`panel ${styles.saved}`}><header className="panel-head"><div><span className="eyebrow">Dashboard</span><h2>Gráficos guardados</h2></div></header><PagedTable><thead><tr><th>Informe guardado</th></tr></thead><tbody>{charts.map(chart=><tr key={chart.id}><td><div className={styles.savedRow}><span className={styles.savedIcon}><BarChart3 size={16}/></span><div><strong>{chart.title}</strong><small>{metricLabels[chart.metric]} por {dimensionLabels[chart.dimension].toLowerCase()} · {chart.chartType}</small></div><button onClick={()=>removeChart(chart.id)} disabled={busy} aria-label="Eliminar"><Trash2 size={15}/></button></div></td></tr>)}</tbody></PagedTable></section></WorkspaceTabs></div>;
+ function generate(event:FormEvent<HTMLFormElement>) {
+  event.preventDefault();const form=new FormData(event.currentTarget);
+  const start=String(form.get("start")),end=String(form.get("end"));
+  if(start>end||end>today){setError("Revisá el intervalo de fechas.");return;}
+  setCustom({title:String(form.get("title")).trim()||"Reporte personalizado",filter:{start,end,scope,product:String(form.get("product")||""),supplier:String(form.get("supplier")||""),seller:scope==="sales"?String(form.get("seller")||""):"",client:scope==="sales"?String(form.get("client")||""):""},details:form.get("details")==="on",pie:String(form.get("pie")) as PieMode,ranking:String(form.get("ranking")) as RankingMode});
+  setError("");setModal("result");
+ }
+ return <div className={`view ${layout.page} ${styles.page}`}>
+  <PageHeader title="Reportes" action={false}/>
+  <div className={styles.periodRow}><div className="workspace-tablist" role="tablist" aria-label="Período del reporte">{(Object.keys(periodLabels) as Period[]).map((value,index)=><button key={value} role="tab" id={"report-tab-"+value} aria-controls="report-period-panel" aria-selected={period===value} tabIndex={period===value?0:-1} onClick={()=>setPeriod(value)} onKeyDown={event=>{const all=Object.keys(periodLabels) as Period[];const next=event.key==="ArrowRight"?(index+1)%4:event.key==="ArrowLeft"?(index+3)%4:event.key==="Home"?0:event.key==="End"?3:null;if(next!==null){event.preventDefault();setPeriod(all[next]);document.getElementById("report-tab-"+all[next])?.focus();}}}>{periodLabels[value]}</button>)}</div><label className={styles.dateSelector}><span>{period==="today"?"Fecha":period==="month"?"Mes":period==="semester"?"Mes final":"Año"}</span>{period==="year"?<select aria-label="Año del reporte" value={selection.year||today.slice(0,4)} onChange={e=>setSelection({...selection,year:e.target.value})}>{years.map(year=><option key={year} value={year}>{year}</option>)}</select>:<input aria-label={period==="today"?"Fecha del reporte":period==="month"?"Mes del reporte":"Mes final del semestre"} type={period==="today"?"date":"month"} value={selection[period]||(period==="today"?today:today.slice(0,7))} max={period==="today"?today:today.slice(0,7)} onChange={e=>{if(e.target.value&&e.target.validity.valid)setSelection({...selection,[period]:e.target.value});}}/>}</label></div>
+  <div id="report-period-panel" role="tabpanel" aria-labelledby={"report-tab-"+period} className={styles.reportBody} aria-busy={loading}>
+   <Metrics report={report}/>
+   <Charts report={report} pie={pie} ranking={ranking} top={period!=="today"} onPie={setPie} onRanking={setRanking}/>
+  </div>
+  <footer className={styles.actions}>
+   <button className={`primary-btn ${layout.headAction}`} onClick={()=>{setScope("both");setError("");setModal("custom");}} disabled={loading}><FileSliders size={16}/>Reporte personalizado</button>
+   <button className={styles.secondary} disabled={loading||exporting} onClick={()=>void download(report,"Reporte · "+periodLabels[period],pie,ranking,period!=="today")}><Download size={16}/>{exporting?"Exportando…":"Exportar a PDF"}</button>
+   <button className={styles.secondary} disabled={loading} onClick={()=>{setSellerId("");setError("");setModal("sellers");}}><UsersRound size={16}/>Resumen de vendedores</button>
+  </footer>
+  {error&&!modal&&<p role="alert" className="operation-error">{error}</p>}
+  {modal==="custom"&&<ReportModal key="custom" title="Reporte personalizado" onClose={close}>
+   <form onSubmit={generate} className={styles.form}>
+    <div className={styles.field}><label htmlFor="report-title">Título</label><input id="report-title" name="title" required maxLength={150} defaultValue="Reporte personalizado"/></div>
+    <div className={styles.formGrid}><div className={styles.field}><label htmlFor="report-start">Desde</label><input id="report-start" name="start" type="date" required max={today} defaultValue={range.start}/></div><div className={styles.field}><label htmlFor="report-end">Hasta</label><input id="report-end" name="end" type="date" required max={today} defaultValue={range.end}/></div>
+    <div className={styles.field}><label htmlFor="report-scope">Operaciones</label><select id="report-scope" name="scope" value={scope} onChange={e=>setScope(e.target.value as typeof scope)}><option value="both">Compras y ventas</option><option value="purchases">Compras</option><option value="sales">Ventas</option></select></div>
+    <div className={styles.field}><label htmlFor="report-product">Dispositivo</label><select id="report-product" name="product"><option value="">Todos</option>{raw.products.map(p=><option key={p.id} value={p.id}>{p.marca} · {p.nombre}</option>)}</select></div>
+    <div className={styles.field}><label htmlFor="report-supplier">Proveedor</label><select id="report-supplier" name="supplier"><option value="">Todos</option>{raw.suppliers.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></div>
+    {scope==="sales"&&<><div className={styles.field}><label htmlFor="report-client">Cliente</label><select id="report-client" name="client"><option value="">Todos</option>{raw.clients.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></div><div className={styles.field}><label htmlFor="report-seller">Vendedor</label><select id="report-seller" name="seller"><option value="">Todos</option>{raw.sellers.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></div></>}
+    <div className={styles.field}><label htmlFor="report-pie">Gráfico</label><select id="report-pie" name="pie" defaultValue={pie}><option value="products">Unidades</option><option value="clients">Clientes</option><option value="suppliers">Proveedores</option></select></div>
+    <div className={styles.field}><label htmlFor="report-ranking">Ranking</label><select id="report-ranking" name="ranking" defaultValue={ranking}><option value="products">Dispositivos más caros</option><option value="sellers">Vendedores por ganancia</option></select></div></div>
+    <label className={styles.check}><input type="checkbox" name="details" defaultChecked/>Incluir detalle de operaciones</label>
+    {error&&<p role="alert" className="operation-error">{error}</p>}
+    <div className={styles.modalActions}><button className="primary-btn" type="submit">Generar reporte</button></div>
+   </form>
+  </ReportModal>}
+  {modal==="result"&&custom&&customReport&&<ReportModal key="result" title={custom.title} onClose={close}>
+   <p className={styles.range}>{formatDate(custom.filter.start)} — {formatDate(custom.filter.end)}</p>
+   <Metrics report={customReport}/>
+   <Charts report={customReport} pie={custom.pie} ranking={custom.ranking} top={custom.filter.start!==custom.filter.end} onPie={value=>setCustom({...custom,pie:value})} onRanking={value=>setCustom({...custom,ranking:value})}/>
+   {custom.details&&<><h3>Detalle de operaciones</h3><div className={styles.detailList}>{customReport.purchases.map(r=><article key={r.id}><strong>{r.product}</strong><small>Compra #{r.id} · {formatDate(r.date)} · {r.supplier}</small><span>{r.quantity} unidades · {formatUsd(r.cost)}</span></article>)}</div><SalesDetail report={customReport}/></>}
+   {error&&<p role="alert" className="operation-error">{error}</p>}
+   <div className={styles.modalActions}><button className="primary-btn" disabled={exporting} onClick={()=>void download(customReport,custom.title,custom.pie,custom.ranking,custom.filter.start!==custom.filter.end,custom.details)}><Download size={16}/>{exporting?"Exportando…":"Exportar a PDF"}</button></div>
+  </ReportModal>}
+  {modal==="sellers"&&<ReportModal key="sellers" title="Resumen de vendedores" onClose={close}>
+   <p className={styles.range}>{formatDate(range.start)} — {formatDate(range.end)}</p>
+   <div className={styles.sellerLayout}><div className={styles.sellerList} aria-label="Vendedores">{raw.sellers.length?raw.sellers.map(s=><button key={s.id} aria-pressed={sellerId===String(s.id)} onClick={()=>setSellerId(String(s.id))}>{s.nombre}</button>):<p>No hay vendedores registrados.</p>}</div>
+   <section>{seller?<><h3>{seller.nombre}</h3><dl className={styles.sellerMetrics}>{[["Ventas",String(sellerReport.soldUnits)],["Importe vendido",formatUsd(sellerReport.revenue)],["Costo vendido",formatUsd(sellerReport.soldCost)],["Ganancia",formatUsd(sellerReport.profit)],["Comisión",formatUsd(sellerReport.commission)],["Pagos verificados",sellerReport.paid+" / "+sellerReport.soldUnits],["Ticket promedio",formatUsd(sellerReport.soldUnits?sellerReport.revenue/sellerReport.soldUnits:0)],["Clientes",String(new Set(sellerReport.sales.map(r=>r.clientId)).size)]].map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><SalesDetail report={sellerReport}/></>:<p className={styles.empty}>Seleccioná un vendedor.</p>}</section></div>
+  </ReportModal>}
+ </div>;
 }
