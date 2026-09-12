@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { Orbitron } from "next/font/google";
 import { useApp } from "@/contexts/AppContext";
-import pglLogo from "@/logo blanco SIN FONDO.png";
+import pglLogo from "@/assets/pgl-logo.png";
 import styles from "./Logo.module.css";
 
 const orbitron = Orbitron({ subsets: ["latin"], weight: "600" });

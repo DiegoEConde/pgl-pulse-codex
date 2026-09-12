@@ -1,8 +1,8 @@
 import type { Snapshot, PurchaseOrder, PurchaseStatus, Sale, StockUnit } from "@/types/operations";
-import type { AnalyticsRow } from "@/types/analytics";
 import { decodePurchaseDetails } from "./purchase-details";
 import { operationalDate } from "./dates";
 
+// Une los IDs del snapshot con los catálogos, sin modificar los datos recibidos.
 export function deriveOperations(data: Snapshot) {
   const products = new Map(data.products.map(row => [row.id, row]));
   const suppliers = new Map(data.suppliers.map(row => [row.id, row]));
@@ -37,15 +37,5 @@ export function deriveOperations(data: Snapshot) {
     commissionUsd: unit.comision_usd ?? 0, paid: unit.pago_verificado,
     status: unit.estado as Sale["status"], deliveredAt: unit.fecha_entrega,
   })).sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id);
-  const analytics: AnalyticsRow[] = data.units.map(unit => {
-    const product = products.get(unit.producto_id);
-    const order = ordersById.get(unit.pedido_id);
-    return { id: "U-" + unit.id, date: operationalDate(unit.fecha_venta ?? unit.fecha_ingreso_stock), state: unit.estado,
-      product: product?.nombre ?? "—", brand: product?.marca ?? "—", category: product?.categoria ?? "—",
-      supplier: suppliers.get(order?.proveedor_id ?? 0)?.nombre ?? "—",
-      client: clients.get(unit.cliente_id ?? 0)?.nombre ?? "—", seller: sellers.get(unit.vendedor_id ?? 0)?.nombre ?? "—",
-      cost: unit.precio_costo_usd + unit.costo_envio_usd, sale: unit.precio_venta_usd ?? 0,
-      commission: unit.comision_usd ?? 0, paid: unit.pago_verificado };
-  });
-  return { orders, stock, sales, analytics };
+  return { orders, stock, sales };
 }

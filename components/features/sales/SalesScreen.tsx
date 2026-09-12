@@ -25,6 +25,7 @@ export default function SalesScreen() {
   const [dirty, setDirty] = useState(false);
   const [unitId, setUnitId] = useState("");
   const selected = available.find(unit => String(unit.databaseId) === unitId);
+  // La RPC reutiliza este UUID en reintentos y bloquea la unidad para evitar ventas dobles.
   const requestId = useRef("");
   const matches = (sale: Sale) => `${sale.id} ${sale.product} ${sale.code} ${sale.client} ${sale.seller}`.toLowerCase().includes(search.toLowerCase()) && (status === "TODOS" || sale.status === status);
   const salesToday = sales.filter(sale => sale.date === today && matches(sale));

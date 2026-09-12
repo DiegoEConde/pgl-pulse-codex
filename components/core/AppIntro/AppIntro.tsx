@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
-import logo from "@/logo blanco SIN FONDO.png";
+import logo from "@/assets/pgl-logo.png";
 import styles from "./AppIntro.module.css";
 
 export default function AppIntro({ children }: { children: ReactNode }) {
@@ -11,6 +11,7 @@ export default function AppIntro({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!ready) return;
+    // Sincroniza la salida con el CSS y respeta la preferencia de movimiento reducido.
     const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 800 : 5600;
     const timer = window.setTimeout(() => setFinished(true), duration);
     return () => window.clearTimeout(timer);

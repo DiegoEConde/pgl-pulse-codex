@@ -2,6 +2,7 @@ import { getSupabase } from "./client";
 import type { Database } from "./types";
 
 type Functions = Database["public"]["Functions"];
+// Las RPC validan estados y guardan cada operación completa dentro de una transacción.
 export async function runOperation<K extends keyof Functions>(name: K, args: Functions[K]["Args"]) {
   const { data, error } = await getSupabase().rpc(name, args);
   if (error) throw error;

@@ -1,31 +1,35 @@
-﻿# PGL Pulse
+# PGL Pulse
 
-Aplicación Next.js basada en el mockup aprobado y la arquitectura centrada en la unidad.
+Gestión de compras, unidades físicas, ventas y repartos para PGL Electrónica. Aplicación Next.js con datos compartidos en Supabase.
 
 ## Ejecutar
 
+Usar Node.js 22 (versión utilizada en las validaciones) y npm. Copiar `.env.example` a `.env.local` y completar la URL y la clave publicable del proyecto.
+
 ```powershell
-npm install
+npm ci
 npm run dev
 ```
 
-Abrir http://localhost:3000. El archivo `index.html` se conserva como referencia del mockup; la integración funciona en la aplicación Next.js.
+Abrir http://localhost:3000. Para producción local: `npm run build` y luego `npm run start`.
 
-## Supabase
+## Guía del proyecto
 
-Datos, Compras, Ventas, Reparto, Stock, Inicio y Reportes están conectados a Supabase. La aplicación funciona sin cuentas, con acceso compartido mediante el rol `anon` y operaciones transaccionales.
+- [Reglas de la aplicación](docs/REGLAS-APP.md): dominio, estados, cálculos y diferencias entre pantallas.
+- [Roadmap](docs/ROADMAP.md): decisiones y mejoras pendientes.
+- [Arquitectura](docs/ARQUITECTURA-FRONTEND.md): carpetas, flujo de datos y dónde modificar cada responsabilidad.
+- [Supabase](docs/REVISION-SUPABASE.md): acceso, migraciones y límites de la integración.
+- [Reportes](docs/REPORTES.md), [Repartos](docs/REPARTO.md) y [responsive](docs/RESPONSIVE.md): especificaciones de cada área.
+- [Pruebas](tests/README.md): ejecución, cobertura y archivos generados.
+- [Historial](docs/historico-proyecto.md): hitos y decisiones relevantes.
 
-Copiar `.env.example` a `.env.local` y configurar la URL y la clave publicable si se trabaja en otro equipo.
-
-Ver [estado de integración, acceso y validaciones](docs/REVISION-SUPABASE.md). Las migraciones se conservan en `supabase/migrations`.
-
-## Validar
+## Verificación rápida
 
 ```powershell
-node --test tests/operations.test.cjs
+npm test
 npm run lint
-npx tsc --noEmit --incremental false
 npm run build
+npx tsc --noEmit --incremental false
 ```
 
-La prueba de navegador y sus condiciones de ejecución están documentadas en la revisión de Supabase.
+Con un servidor iniciado, `npm run test:browser` ejecuta las tres pruebas de navegador. Consultar los requisitos de Playwright y Edge en la guía de pruebas.

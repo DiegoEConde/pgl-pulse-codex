@@ -16,6 +16,7 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
+  // Ignora respuestas viejas si otra actualización terminó antes o se desmontó el proveedor.
   const generation = useRef(0);
   const refresh = useCallback(async () => {
     const request = ++generation.current;
@@ -34,6 +35,7 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
   const cancelRefresh = useCallback(() => { generation.current++; }, []);
   useEffect(() => {
     const kickoff = setTimeout(() => { void refresh(); }, 0);
+    // La fecha cambia incluso en segundo plano; los datos se consultan si la pestaña está visible.
     const interval = setInterval(() => { setToday(operationalDate()); if (!document.hidden) void refresh(); }, 30000);
     const focus = () => { void refresh(); };
     window.addEventListener("focus", focus);

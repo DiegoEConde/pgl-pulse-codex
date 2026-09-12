@@ -7,21 +7,10 @@ function load(file,deps={}) {
  const exports={};new Function("require","exports",output)(name=>{if(name in deps)return deps[name];throw Error("Unexpected import: "+name);},exports);return exports;
 }
 const dates=load("lib/dates.ts");
-const analytics=load("lib/analytics.ts");
 const operations=load("lib/operations.ts",{"./dates":dates, "./purchase-details":load("lib/purchase-details.ts")});
 test("La fecha operativa usa Buenos Aires incluso después de medianoche UTC",()=>{
  assert.equal(dates.operationalDate("2026-09-10T01:30:00Z"),"2026-09-09");
  assert.equal(dates.operationalDate("2026-09-10T03:00:00Z"),"2026-09-10");
-});
-test("Una venta de importe cero conserva la pérdida y el stock no genera ganancia",()=>{
- const sold={state:"ENTREGADA",sale:0,cost:12.05,commission:1};
- assert.equal(analytics.metricValue(sold,"profit"),-13.05);
- assert.equal(analytics.metricValue({...sold,state:"STOCK"},"profit"),0);
-});
-test("Los meses se ordenan cronológicamente y los filtros no mezclan estados",()=>{
- const config={dimension:"month",metric:"sales",state:"ENTREGADA"};
- const rows=[{date:"2026-09-09",state:"ENTREGADA",sale:50},{date:"2026-08-31",state:"ENTREGADA",sale:10},{date:"2026-09-08",state:"REPARTO",sale:80}];
- assert.deepEqual(analytics.aggregate(rows,config),[{label:"2026-08",value:10},{label:"2026-09",value:50}]);
 });
 test("Las líneas reales y el envío forman los totales de compra y venta",()=>{
  const raw={
@@ -37,5 +26,11 @@ test("Las líneas reales y el envío forman los totales de compra y venta",()=>{
  assert.equal(result.sales[0].costUsd,10.02);
  assert.equal(result.sales[0].date,"2026-09-09");
  assert.equal(result.sales[0].deliveredAt,"2026-09-10T14:00:00Z");
- assert.equal(result.analytics[0].cost,10.02);
+ assert.equal(result.stock[0].costUsd,10.02);
+ // Una venta de importe cero conserva el costo y la comisión históricos.
+ raw.units[0].precio_venta_usd=0;
+ const sale=operations.deriveOperations(raw).sales[0];
+ assert.equal(sale.priceUsd-sale.costUsd-sale.commissionUsd,-11.52);
+ raw.units[0].estado="STOCK";
+ assert.equal(operations.deriveOperations(raw).sales.length,0);
 });

@@ -15,9 +15,10 @@ export default function PagedTable({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
     const element = root.current;
     if (!element) return;
-    // Keep the tallest measured row for this dataset to avoid capacity oscillation.
+    // Conserva la fila más alta para que la capacidad no oscile al cambiar de página.
     let measuredRowHeight = 64;
     const resize = () => {
+      // En celular muestra todas las filas y permite desplazarse.
       if (window.innerWidth <= 740) { setCapacity(Math.max(rows.length, 1)); return; }
       const top = element.getBoundingClientRect().top;
       const head = element.querySelector("thead")?.getBoundingClientRect().height ?? 36;

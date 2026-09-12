@@ -1,5 +1,8 @@
+const fs=require("node:fs");
 const assert=require("node:assert/strict");
 const {chromium}=require(process.env.PGL_PLAYWRIGHT_PATH || process.env.TEMP+"/pandasoft-validation/node_modules/playwright");
+// Las capturas y los PDF se regeneran en una carpeta ignorada por Git.
+fs.mkdirSync("tests/artifacts",{recursive:true});
 const snapshot={products:[{id:1,marca:"Apple",nombre:"iPhone 15",categoria:"Celulares"}],suppliers:[
 {id:1,nombre:"Jacinto",direccion:"Calle de Prueba 1500",telefono:"011 0000-1500",horario_desde:"15:00:00",horario_hasta:"16:00:00"},
 {id:2,nombre:"Roman",direccion:"Calle de Prueba 1400",telefono:"011 0000-1400",horario_desde:"14:00:00",horario_hasta:"16:00:00"},
@@ -62,7 +65,7 @@ try {
  assert.ok(copied.includes("*(TOTAL: USD 4502.50)*"));
  assert.ok(copied.indexOf("*ANSELMO") < copied.indexOf("*ROMAN"));
  assert.ok(copied.includes("12/128 GB - $ 450.25"));
- await page.screenshot({path:"tests/delivery-desktop.png",fullPage:true});
+ await page.screenshot({path:"tests/artifacts/delivery-desktop.png",fullPage:true});
  assert.deepEqual(errors,[]);console.log("PASS: create purchases, grouping, time order, RAM/ROM, reload, pagination and 6 viewports.");
 }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1});

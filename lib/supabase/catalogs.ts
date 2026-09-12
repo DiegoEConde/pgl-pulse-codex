@@ -2,12 +2,10 @@ import { getSupabase } from "./client";
 import type { Database } from "./types";
 import { catalogConfig, type CatalogId, type MasterRecord } from "@/config/catalogs";
 
-
-
 export async function persistRecord(catalog: CatalogId, record: MasterRecord, isNew: boolean): Promise<MasterRecord> {
   const values: Record<string, string | number | null> = {};
   for (const field of catalogConfig[catalog].fields) values[field.key] = record[field.key] ?? null;
-  // Fields are validated by the form and the database. Never submit a locally generated ID.
+  // Envía solo campos del catálogo; los IDs nuevos los asigna PostgreSQL.
   const client = getSupabase();
   const query = (() => {
     switch (catalog) {

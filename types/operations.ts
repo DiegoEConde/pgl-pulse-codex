@@ -18,6 +18,7 @@ export type StockUnit = {
   supplier: string; receivedAt: string; costUsd: number; salePriceUsd: number | null;
   state: string;
 };
+// Contrato de pgl_snapshot; charts se conserva por compatibilidad con la base existente.
 export type Snapshot = {
   products: Tables<"producto">[]; suppliers: Tables<"proveedor">[]; clients: Tables<"cliente">[];
   sellers: Tables<"vendedor">[]; orders: Tables<"pedido">[]; lines: Tables<"detalle_pedido">[];

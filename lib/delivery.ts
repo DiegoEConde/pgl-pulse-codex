@@ -9,6 +9,7 @@ export function buildDeliveryGroups(raw: Snapshot) {
     from: string; until: string;
     lines: { id: number; orderId: number; product: string; ram: string; rom: string; color: string; quantity: number; cost: number; status: string }[];
   }>();
+  // Incluye pendientes de cualquier fecha; recibir o cerrar el pedido lo quita del recorrido.
   for (const order of raw.orders) {
     if (order.cerrado_en || order.estado === "RECIBIDO") continue;
     const supplier = suppliers.get(order.proveedor_id);
@@ -33,6 +34,7 @@ export function buildDeliveryGroups(raw: Snapshot) {
     .sort((a,b) => (a.from || "99:99").localeCompare(b.from || "99:99") || a.name.localeCompare(b.name, "es") || a.supplierId - b.supplierId);
 }
 
+// Exporta el conjunto completo, aunque la tarjeta muestre solo una página de productos.
 export function formatDeliveryMessage(groups: ReturnType<typeof buildDeliveryGroups>): string {
   const clean = (value: string) => value.replace(/[\r\n]+/g, " ").replace(/\*/g, "").trim();
   const money = (cents: number) => (cents / 100).toFixed(cents % 100 === 0 ? 0 : 2);

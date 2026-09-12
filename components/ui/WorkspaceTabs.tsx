@@ -4,6 +4,7 @@ import { Children, useId, useState, type ReactNode } from "react";
 export default function WorkspaceTabs({ labels, children }: { labels: string[]; children: ReactNode }) {
   const [selected, setSelected] = useState(0);
   const id = useId();
+  // Los paneles se ocultan sin desmontarse para conservar filtros y formularios.
   const panels = Children.toArray(children);
   return <div className="workspace-tabs">
     <div className="workspace-tablist" role="tablist" aria-label="Secciones de la pantalla">

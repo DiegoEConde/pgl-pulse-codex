@@ -66,7 +66,7 @@ export default function DashboardScreen() {
             <div><span className={styles.stepIcon}><ArrowDownToLine size={17} /></span><strong>{closed}</strong><span>En historial</span></div>
           </div>
         </div>
-        <footer className={styles.purchaseFooter}><span className={styles.statusDot} /><p>{!dailyOrders.length ? "Todavía no hay compras registradas hoy." : drafts ? `${drafts} pedidos creados esperan confirmación.` : "Todos los pedidos del día están confirmados."} <span>El cierre del día se realiza desde Reparto.</span></p><button className={styles.link} onClick={() => navigate("reparto")}>Ir a Reparto <ArrowRight size={14} /></button></footer>
+        <footer className={styles.purchaseFooter}><span className={styles.statusDot} /><p>{!dailyOrders.length ? "Todavía no hay compras registradas hoy." : drafts ? `${drafts} pedidos creados esperan confirmación.` : "Todos los pedidos del día están confirmados."}</p><button className={styles.link} onClick={() => navigate("reparto")}>Ir a Reparto <ArrowRight size={14} /></button></footer>
       </article>
 
       <article className={styles.card + " " + styles.debt}>

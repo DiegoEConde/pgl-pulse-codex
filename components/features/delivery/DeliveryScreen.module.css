@@ -15,10 +15,10 @@
 .label { display: block; color: var(--muted); font-size: 9px; margin-bottom: 4px; }
 .price { text-align: right; }
 .price strong { color: #9fdbbd; font-family: var(--font-mono); }
-.cardFooter, .pagination { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 10px; color: var(--muted); }
+.cardFooter { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 10px; color: var(--muted); }
 .cardFooter { padding: 7px 16px; border-top: 1px solid var(--line); min-height: 33px; }
-.cardFooter > div, .pagination > div { display: flex; align-items: center; gap: 8px; }
-.cardFooter button, .pagination button { padding: 4px 8px; border: 1px solid var(--line); background: transparent; color: var(--text); border-radius: 5px; font-size: 10px; cursor: pointer; }
+.cardFooter > div { display: flex; align-items: center; gap: 8px; }
+.cardFooter button { padding: 4px 8px; border: 1px solid var(--line); background: transparent; color: var(--text); border-radius: 5px; font-size: 10px; cursor: pointer; }
 .empty { border: 1px dashed var(--line); border-radius: 12px; padding: 45px 24px; text-align: center; color: var(--muted); }
 .empty svg { color: #77c6ff; }
 .empty h2 { color: var(--text); font-size: 20px; }

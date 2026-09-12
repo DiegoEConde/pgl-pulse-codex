@@ -1,51 +1,42 @@
-# Arquitectura frontend inicial
+# Arquitectura de PGL Pulse
 
-## Objetivo
+Estado revisado: 2026-09-12. Next.js App Router, React, TypeScript y Supabase. La interfaz tiene siete pantallas dentro de una única página; `AppContext` controla la navegación local.
 
-Esta estructura convierte el mockup aprobado en una aplicación Next.js real, manteniendo la integración de datos fuera de alcance hasta finalizar y aprobar las pantallas.
+## Carpetas
 
-## Capas
+| Ruta | Responsabilidad |
+| --- | --- |
+| `app/` | Entrada, proveedores de contexto y estilos globales. `base.css` contiene la base visual; `globals.css`, los ajustes comunes y responsive. |
+| `assets/` | Logo importado por Next Image. |
+| `components/core/` | Intro, estructura, navegación, conexión y selección de pantalla. |
+| `components/features/` | Pantallas y componentes específicos de cada módulo. |
+| `components/ui/` | Encabezados, métricas, pestañas, paginación y layout compartido. |
+| `contexts/` | Navegación visual y snapshot compartido de la base. |
+| `hooks/` | Ejecución de operaciones, bloqueo de dobles envíos y errores. |
+| `config/` | Navegación y campos de catálogos. |
+| `lib/` | Transformaciones y reglas de negocio independientes de React; exportación PDF. |
+| `lib/supabase/` | Cliente, acceso a catálogos, RPC y tipos del esquema. |
+| `types/` | Contratos de navegación y operaciones para la interfaz. |
+| `supabase/` | Migraciones aplicadas y prueba transaccional SQL. |
+| `tests/` | Pruebas de lógica y navegador; resultados regenerables en `artifacts/`. |
+| `docs/` | Reglas vigentes, planificación y seguimiento. |
 
-- `app/`: entrada, layout y estilos globales.
-- `components/core/`: AppShell, Header, Navigation y selección de pantalla.
-- `components/ui/`: piezas visuales reutilizables sin reglas de negocio.
-- `components/features/`: pantallas y componentes propios de cada módulo.
-- `contexts/`: estado global puramente visual.
-- `config/`: navegación y configuración estática.
-- `lib/mock/`: datos ficticios reemplazables posteriormente por servicios.
-- `types/`: contratos compartidos de TypeScript.
+## Lectura y escritura
 
-## Módulos previstos
+1. `ProgramProvider` consulta `pgl_snapshot` al montar, al recuperar foco, cada 30 segundos con la pestaña visible y al actualizar manualmente.
+2. `deriveOperations` une IDs con catálogos y produce pedidos, ventas y stock para las pantallas. Reportes y Repartos derivan sus propias vistas del mismo snapshot.
+3. Una respuesta antigua no reemplaza una actualización posterior: se compara la generación de cada solicitud.
+4. Los formularios de operaciones usan `useOperation` y RPC transaccionales. Tras guardar se vuelve a leer el snapshot; no se inventa un resultado local.
+5. Datos usa `persistRecord` para altas y edición de los cuatro catálogos. Los formularios y la base validan sus campos; PostgreSQL asigna los IDs.
 
-1. Inicio
-2. Compras
-3. Ventas
-4. Reparto
-5. Stock
-6. Datos
-7. Reportes
+`AppProvider` envuelve a `ProgramProvider` en el layout. El constructor antiguo de gráficos se retiró porque ninguna pantalla lo montaba. `charts` permanece en el contrato del snapshot y en el esquema remoto por compatibilidad; no hay interfaz actual para esos registros.
 
-## Restricciones actuales
+## Dónde hacer cambios
 
-- Sin Supabase.
-- Sin variables de entorno.
-- Sin persistencia.
-- Los números del Dashboard son demostrativos.
-- La Unidad física continúa siendo la referencia central del dominio.
+- Estados, integridad o operaciones atómicas: nueva migración SQL, tipos y adaptador RPC. No editar migraciones ya aplicadas.
+- Cálculos, fechas o agrupaciones: `lib/` y pruebas de lógica correspondientes.
+- Campos de catálogos: `config/catalogs.ts`, adaptador y esquema si cambia la persistencia.
+- Interfaz de una pantalla: su carpeta de feature y CSS Module. Reutilizar el layout, las pestañas y las tablas compartidas.
+- Comentarios: explicar reglas o decisiones no evidentes, sin narrar cada línea. Los tipos de Supabase reflejan el esquema; evitar retoques cosméticos allí.
 
-## Integración futura
-
-Cuando las pantallas estén aprobadas, `lib/mock` podrá ser sustituido por una capa de servicios y repositorios conectada a Supabase, sin mover responsabilidades de datos a los componentes visuales.
-
-## Contrato Compras → Reparto
-
-`PurchasesContext` separa `todayOrders` de `orderHistory` y expone `finalizeDailyOrders()`.
-
-Cuando Reparto implemente la validación del cierre diario deberá invocar esa acción una sola vez. La acción:
-
-1. mueve todos los pedidos del día al historial;
-2. vacía la lista operativa de pedidos del día;
-3. conserva el historial completo en memoria;
-4. permite que Compras muestre únicamente los 10 registros más recientes.
-
-Compras no ejecuta el cierre por sí misma. La autoridad para finalizar el día pertenece al módulo Reparto.
+Las reglas completas están en [REGLAS-APP.md](REGLAS-APP.md). La apariencia y sus límites se documentan en [RESPONSIVE.md](RESPONSIVE.md).

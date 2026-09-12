@@ -27,10 +27,12 @@ export default function PurchasesScreen() {
   const [dirty, setDirty] = useState(false);
   const [lineKeys, setLineKeys] = useState([0]);
   const lineCounter = useRef(0);
+  // Se mantiene el mismo UUID al reintentar: la RPC evita crear pedidos duplicados.
   const requestId = useRef("");
   const matches = (order: PurchaseOrder) => `${order.id} ${order.supplier} ${order.products.join(" ")}`.toLowerCase().includes(search.toLowerCase()) && (status === "TODOS" || order.status === status);
   const todayOrders = orders.filter(order => order.date === today && !order.closed && matches(order));
   const history = orders.filter(order => (order.date !== today || order.closed) && matches(order));
+  // La recepción pide un registro por unidad física, no uno por línea de compra.
   const receiptRows = detail?.lines.flatMap(line => Array.from({ length: line.cantidad }, (_, index) => ({ line, key: line.id + "-" + index }))) ?? [];
 
   function close() {

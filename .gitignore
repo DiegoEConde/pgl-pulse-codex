@@ -6,3 +6,7 @@
 !.env.example
 npm-debug.log*
 .DS_Store
+
+# Resultados reproducibles de las pruebas; no se versionan.
+/tests/artifacts/
+*.tsbuildinfo

@@ -47,6 +47,7 @@ export default function ReportsScreen() {
  const [error,setError]=useState("");
  const [exporting,setExporting]=useState(false);
  const facts=useMemo(()=>reportFacts(raw),[raw]);
+ // Cada pestaña recuerda su selección; el mismo rango alimenta métricas, PDF y vendedores.
  const [selection,setSelection]=useState<Partial<Record<Period,string>>>({});
  const earliestYear=Math.min(Number(today.slice(0,4))-10,...[...facts.purchases,...facts.sales].filter(r=>r.date).map(r=>Number(r.date.slice(0,4))));
  const years=Array.from({length:Number(today.slice(0,4))-earliestYear+1},(_,index)=>String(Number(today.slice(0,4))-index));

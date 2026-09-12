@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { AppProvider } from "@/contexts/AppContext";
-import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import { ProgramProvider } from "@/contexts/ProgramContext";
 import "./globals.css";
 
@@ -16,7 +15,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es" className={`${sans.variable} ${mono.variable}`}>
-      <body><AppProvider><ProgramProvider><AnalyticsProvider>{children}</AnalyticsProvider></ProgramProvider></AppProvider></body>
+      <body><AppProvider><ProgramProvider>{children}</ProgramProvider></AppProvider></body>
     </html>
   );
 }

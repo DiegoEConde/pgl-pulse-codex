@@ -40,6 +40,7 @@ export default function DataScreen() {
     if (!activeCatalog) return;
     const current = catalogs[activeCatalog];
     if (!editing) return;
+    // El ID cero es solo local; PostgreSQL asigna el definitivo al crear.
     const record: MasterRecord = { id: editing === "new" ? 0 : editing.id, nombre: "" };
     for (const field of catalogConfig[activeCatalog].fields) {
       const value = String(formData.get(field.key) ?? "").trim();

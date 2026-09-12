@@ -1,4 +1,4 @@
-// Versioned envelope keeps optional purchase specifications atomic with the existing RPC.
+// Guarda RAM/ROM junto con las notas hasta que detalle_pedido tenga columnas propias.
 export type MemorySpec = { producto_id: number; color: string; ram: string; rom: string };
 const marker = "pgl.purchase-details.v1";
 export function encodePurchaseDetails(notes: string, lines: MemorySpec[]) {
@@ -6,6 +6,7 @@ export function encodePurchaseDetails(notes: string, lines: MemorySpec[]) {
   return JSON.stringify({ format: marker, notes, lines });
 }
 export function decodePurchaseDetails(value: string | null | undefined): { notes: string; lines: MemorySpec[] } {
+  // Las notas antiguas en texto libre siguen siendo válidas.
   const original = value ?? "";
   try {
     const data = JSON.parse(original);

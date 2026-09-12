@@ -20,8 +20,11 @@ for (let id = 1; id <= 40; id++) {
     const page = await browser.newPage({ reducedMotion: "reduce" });
     const errors = [];
     page.on("pageerror", error => errors.push(error.message));
-    // All data is intercepted: this test never creates records in Supabase.
-    await page.route("**/rest/v1/rpc/pgl_snapshot", route => route.fulfill({ json: snapshot }));
+    // Toda solicitud de datos debe estar simulada; una ruta inesperada hace fallar la prueba.
+    await page.route("**/rest/v1/**", route => {
+      assert.ok(route.request().url().endsWith("/rpc/pgl_snapshot"), "Solicitud de datos inesperada");
+      return route.fulfill({ json: snapshot });
+    });
     await page.goto(process.env.PGL_TEST_URL || "http://localhost:3000", { waitUntil: "networkidle" });
     await page.waitForTimeout(3500);
     for (const [width, height] of [[1440,900], [1280,720], [1024,600], [768,1024], [820,600], [390,844]]) {

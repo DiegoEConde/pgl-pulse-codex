@@ -2,11 +2,13 @@ import type { Report, PieMode, RankingMode } from "./reports";
 import { reportSlices, expensiveProducts, productiveSellers, pieLabels } from "./reports";
 
 export async function exportReportPdf(report: Report, title: string, mode: PieMode, ranking: RankingMode, top: boolean, details = false) {
+ // Carga la librería solo al exportar; el documento se genera en el navegador.
  const { jsPDF } = await import("jspdf");
  const doc=new jsPDF();
  let y=20;
  const clean=(value:string)=>value.replace(/[\r\n\t]+/g," ").replace(/[^\x20-\xFF]/g,"-");
  const usd=(value:number)=>"USD "+value.toFixed(2);
+ // El mismo escritor ajusta las líneas largas y abre páginas cuando se agota el espacio.
  const line=(text:string,size=10)=>{
   doc.setFontSize(size);
   const rows=doc.splitTextToSize(clean(text),174) as string[];
