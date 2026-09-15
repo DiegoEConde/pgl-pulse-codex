@@ -5,7 +5,7 @@ Pantalla aprobada en el sprint del commit 8fd2d88. Organiza los retiros de compr
 ## Comportamiento
 
 - Título Repartos, botón Generar reparto y cantidad de paradas.
-- Una tarjeta por proveedor con pedidos abiertos en BORRADOR, PEDIDO o ENVÍO. Se excluyen recibidos y cerrados; se incluyen pendientes de fechas anteriores.
+- Una tarjeta por proveedor con pedidos abiertos en BORRADOR, PEDIDO o ENVÍO. Solo se excluyen recibidos; se incluyen pendientes de fechas anteriores aunque tengan una marca histórica cerrado_en.
 - Orden por inicio de horario, luego nombre e ID. Sin horario al final.
 - Cada tarjeta muestra proveedor, dirección, teléfono y horario; líneas con producto, RAM/ROM, color, cantidad y costo unitario USD.
 - Todas las tarjetas permanecen accesibles con scroll vertical; se paginan dos líneas por tarjeta.
@@ -14,11 +14,11 @@ Pantalla aprobada en el sprint del commit 8fd2d88. Organiza los retiros de compr
 
 ## Persistencia y compatibilidad
 
-RAM/ROM son opcionales en Compras. La RPC actual no admite columnas propias en detalle_pedido: se guardan junto con el texto del usuario en un JSON `pgl.purchase-details.v1` dentro de pedido.observaciones, identificadas por producto_id/color.
+El ajuste local del 2026-09-14 guarda variantes en detalle_pedido.atributos y exige las opciones configuradas. Las observaciones antiguas se siguen leyendo. Las variantes se muestran en tarjetas y WhatsApp. Migración aplicada y verificada en Supabase el 2026-09-14; ver [detalle](sprints/COMPRAS-OPCIONES.md).
 
 `lib/purchase-details.ts` codifica y valida ese formato, conservando las observaciones antiguas en texto libre. Al recibir, los valores precargan unidad.ram y unidad.variante. Su normalización futura requiere una migración que mantenga los datos anteriores.
 
-Las RPC de pago, entrega y cierre diario siguen existiendo, pero sus controles se retiraron de esta pantalla. La ubicación definitiva está pendiente en el [roadmap](ROADMAP.md).
+Las RPC históricas se conservan por compatibilidad del esquema. No se incorporará un cierre diario. Los nuevos pagos y el circuito de recepción se implementarán según el [roadmap](ROADMAP.md); B1 evita que un cierre histórico oculte pedidos pendientes.
 
 ## Código y pruebas
 

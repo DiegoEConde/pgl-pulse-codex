@@ -53,3 +53,24 @@ Los scripts de Repartos y Reportes guardan capturas y PDF en `tests/artifacts/`.
 `supabase/tests/integration.sql` comprueba las RPC con rol anon dentro de una transacción terminada en ROLLBACK. Ejecutarlo en un entorno de prueba al modificar el esquema; las secuencias pueden avanzar. No forma parte de npm test y no se ejecutó durante esta limpieza.
 
 El antiguo integration.browser.cjs dependía de controles retirados y se eliminó. Falta reconstruir el circuito completo con la interfaz definitiva. No confundir las pruebas simuladas actuales con una validación completa contra la base remota.
+
+## B2: abonos de ventas
+
+Instalar PostgreSQL embebido fuera del repositorio:
+
+```powershell
+npm install --prefix "$env:TEMP/pandasoft-validation" @electric-sql/pglite
+npm run test:payments
+```
+
+También se admite PGL_PGLITE_PATH con la ruta del paquete. La base se crea en memoria; las migraciones del repositorio y supabase/tests/integration.sql se ejecutan contra esa base local. No usa credenciales ni escribe en Supabase. La prueba no simula varias conexiones PostgreSQL simultáneas.
+
+payments.browser.cjs forma parte de test:browser y admite PGL_TEST_URL. Intercepta REST para probar abonos, respuesta perdida, recuperación de conexión, retiro, móvil, recarga e interfaz sin migración. Genera tests/artifacts/b2-payments-mobile.png.
+
+
+## Opciones de Compras
+
+payments.database.cjs aplica también las migraciones posteriores a B2: variantes, fecha nula, opciones inválidas, duplicados y atomicidad. delivery.browser.cjs cubre categorías, múltiples variantes, recarga, móvil y base sin migrar. Sin escrituras remotas.
+
+
+Validación remota realizada el 2026-09-14 con la CLI autenticada: supabase/tests/integration.sql y supabase/tests/purchase_options.sql. Ambas usan transacción y ROLLBACK; las secuencias pueden avanzar. Verificado también el formulario en localhost:3100 contra el snapshot real, sin enviar escrituras desde el navegador.

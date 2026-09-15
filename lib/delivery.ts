@@ -7,18 +7,18 @@ export function buildDeliveryGroups(raw: Snapshot) {
   const groups = new Map<number, {
     supplierId: number; name: string; address: string; phone: string;
     from: string; until: string;
-    lines: { id: number; orderId: number; product: string; ram: string; rom: string; color: string; quantity: number; cost: number; status: string }[];
+    lines: { id: number; orderId: number; product: string; ram: string; rom: string; variant: string; color: string; quantity: number; cost: number; status: string }[];
   }>();
-  // Incluye pendientes de cualquier fecha; recibir o cerrar el pedido lo quita del recorrido.
+  // Un cierre histórico no acredita recepción: el pedido sigue pendiente hasta RECIBIDO.
   for (const order of raw.orders) {
-    if (order.cerrado_en || order.estado === "RECIBIDO") continue;
+    if (order.estado === "RECIBIDO") continue;
     const supplier = suppliers.get(order.proveedor_id);
     const specs = decodePurchaseDetails(order.observaciones).lines;
     const lines = raw.lines.filter(line => line.pedido_id === order.id).map(line => {
       const product = products.get(line.producto_id);
       const spec = specs.find(item => item.producto_id === line.producto_id && item.color === line.color);
       return { id: line.id, orderId: order.id, product: product ? product.marca + " · " + product.nombre : "Producto no disponible",
-        ram: spec?.ram ?? "", rom: spec?.rom ?? "", color: line.color, quantity: line.cantidad, cost: line.precio_costo_usd, status: order.estado };
+        ram: line.atributos?.ram ?? spec?.ram ?? "", rom: line.atributos?.rom ?? spec?.rom ?? "", variant: Object.entries(line.atributos ?? {}).filter(([key]) => !["ram", "rom"].includes(key)).map(([, value]) => value).join(" · "), color: line.color, quantity: line.cantidad, cost: line.precio_costo_usd, status: order.estado };
     });
     if (!lines.length) continue;
     let group = groups.get(order.proveedor_id);
@@ -44,7 +44,7 @@ export function formatDeliveryMessage(groups: ReturnType<typeof buildDeliveryGro
     const lines = group.lines.map(line => {
       const name = clean(line.product.replace(/ · /g, " ")).toUpperCase();
       const memory = line.ram || line.rom ? ` ${clean(line.ram) || "—"}/${clean(line.rom) || "—"} GB` : "";
-      return `(${line.quantity}) ${name}${memory} - $ ${money(Math.round(line.cost * 100))}\n${clean(line.color).toUpperCase()}`;
+      return `(${line.quantity}) ${name}${memory}${line.variant ? " " + clean(line.variant) : ""} - $ ${money(Math.round(line.cost * 100))}\n${clean(line.color).toUpperCase()}`;
     });
     const total = group.lines.reduce((sum, line) => sum + Math.round(line.cost * 100) * line.quantity, 0);
     return `*${clean(group.name).toUpperCase()} - ${clean(group.address) || "Dirección sin cargar"}*\n${hours}\n\n${lines.join("\n\n")}\n\n*(TOTAL: USD ${money(total)})*`;

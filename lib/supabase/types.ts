@@ -14,6 +14,12 @@ export type Database = {
   }
   public: {
     Tables: {
+      compra_opcion: {
+        Row: { id: number; categoria: string; producto_id: number | null; clave: string; etiqueta: string; valores: string[] };
+        Insert: { id?: number; categoria: string; producto_id?: number | null; clave: string; etiqueta: string; valores: string[] };
+        Update: { categoria?: string; producto_id?: number | null; clave?: string; etiqueta?: string; valores?: string[] };
+        Relationships: [];
+      };
       cliente: {
         Row: {
           direccion: string | null
@@ -360,11 +366,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      pgl_add_sale_payment: { Args: { p_id: number; p_amount: number; p_request: string; p_delivered: boolean }; Returns: number }
+      pgl_create_sale_partial: { Args: { p_unit: number; p_client: number; p_seller: number; p_date: string; p_price: number; p_commission: number; p_amount: number; p_request: string; p_delivered: boolean }; Returns: number }
       pgl_close_day: { Args: { p_date: string }; Returns: number }
       pgl_create_order: {
         Args: {
           p_date: string
-          p_expected: string
+          p_expected: string | null
           p_lines: Json
           p_notes: string
           p_request: string

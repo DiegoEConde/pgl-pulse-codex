@@ -15,7 +15,8 @@ Abrir http://localhost:3000. Para producción local: `npm run build` y luego `np
 
 ## Guía del proyecto
 
-- [Reglas de la aplicación](docs/REGLAS-APP.md): dominio, estados, cálculos y diferencias entre pantallas.
+- [Flujo funcional acordado](docs/FLUJO-FUNCIONAL.md): funcionamiento solicitado para las próximas mejoras y aclaraciones pendientes.
+- [Reglas implementadas en alpha](docs/REGLAS-APP.md): dominio, estados y cálculos del código actual.
 - [Roadmap](docs/ROADMAP.md): decisiones y mejoras pendientes.
 - [Arquitectura](docs/ARQUITECTURA-FRONTEND.md): carpetas, flujo de datos y dónde modificar cada responsabilidad.
 - [Supabase](docs/REVISION-SUPABASE.md): acceso, migraciones y límites de la integración.

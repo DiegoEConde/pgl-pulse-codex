@@ -10,3 +10,6 @@ npm-debug.log*
 # Resultados reproducibles de las pruebas; no se versionan.
 /tests/artifacts/
 *.tsbuildinfo
+
+# Estado local de la CLI de Supabase
+/supabase/.temp/

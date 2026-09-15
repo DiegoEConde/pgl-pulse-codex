@@ -31,3 +31,7 @@
 .detailBody h3 { margin: 0 0 14px; font-size: 13px; }
 @media (max-width: 950px) { .detailGrid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 680px) { .wide { grid-column: auto; } .formGrid, .detailGrid { grid-template-columns: 1fr; } }
+
+.detailBody form { margin-top: 20px; }
+.detailBody fieldset { display: grid; gap: 14px; }
+.detailBody ul { padding-left: 20px; line-height: 1.8; }

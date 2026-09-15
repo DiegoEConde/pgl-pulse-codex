@@ -44,14 +44,14 @@ BEGIN
   PERFORM public.pgl_update_stock(unit_id,request_id::text,'256 GB','12 GB');
   IF (SELECT variante FROM public.unidad WHERE id=unit_id)<>'256 GB' THEN RAISE EXCEPTION 'Edición de stock falló'; END IF;
 
-  PERFORM public.pgl_create_sale(unit_id,client_id,seller_id,day,15,1,false,sale_request);
-  PERFORM public.pgl_create_sale(unit_id,client_id,seller_id,day,15,1,false,sale_request);
+  PERFORM public.pgl_create_sale_partial(unit_id,client_id,seller_id,day,15,1,0,sale_request,false);
+  PERFORM public.pgl_create_sale_partial(unit_id,client_id,seller_id,day,15,1,0,sale_request,false);
   failed := false;
-  BEGIN PERFORM public.pgl_create_sale(unit_id,client_id,seller_id,day,15,1,false,gen_random_uuid());
+  BEGIN PERFORM public.pgl_create_sale_partial(unit_id,client_id,seller_id,day,15,1,0,gen_random_uuid(),false);
   EXCEPTION WHEN raise_exception THEN failed := true; END;
   IF NOT failed THEN RAISE EXCEPTION 'La misma unidad se vendió dos veces'; END IF;
   IF (SELECT estado FROM public.unidad WHERE id=unit_id)<>'REPARTO' THEN RAISE EXCEPTION 'Venta no reservó stock'; END IF;
-  PERFORM public.pgl_set_payment(unit_id,true);
+  PERFORM public.pgl_add_sale_payment(unit_id,15,gen_random_uuid(),true);
   PERFORM public.pgl_deliver(unit_id);
   SELECT fecha_entrega INTO delivery_time FROM public.unidad WHERE id=unit_id;
   PERFORM public.pgl_deliver(unit_id);

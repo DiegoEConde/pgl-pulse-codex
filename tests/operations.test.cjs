@@ -34,3 +34,16 @@ test("Las líneas reales y el envío forman los totales de compra y venta",()=>{
  raw.units[0].estado="STOCK";
  assert.equal(operations.deriveOperations(raw).sales.length,0);
 });
+
+test("Abonos suman centavos y el saldo alpha no inventa historial",()=>{
+ const raw={products:[],suppliers:[],clients:[],sellers:[],orders:[],lines:[],charts:[],units:[{id:1,estado:"ENTREGADA",fecha_venta:"2026-09-13",fecha_ingreso_stock:"2026-09-13",precio_venta_usd:100,pago_verificado:true}]};
+ let sale=operations.deriveOperations(raw).sales[0];
+ assert.equal(sale.openingPaidUsd,100);assert.equal(sale.pendingUsd,0);assert.deepEqual(sale.payments,[]);
+ raw.units[0].cobrado_inicial_usd=0;raw.units[0].pago_verificado=false;raw.salePayments=[];
+ for(const [amount,pending] of [[40,60],[40,20],[20,0]]) {
+  raw.salePayments.push({unidad_id:1,importe_usd:amount});sale=operations.deriveOperations(raw).sales[0];
+  assert.equal(sale.pendingUsd,pending);assert.equal(sale.paidUsd,100-pending);
+ }
+ raw.units[0].precio_venta_usd=0.3;raw.salePayments=[{unidad_id:1,importe_usd:0.1},{unidad_id:1,importe_usd:0.2},{unidad_id:99,importe_usd:90}];
+ sale=operations.deriveOperations(raw).sales[0];assert.equal(sale.pendingUsd,0);assert.equal(sale.paidUsd,0.3);
+});

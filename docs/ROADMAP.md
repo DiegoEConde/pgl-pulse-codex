@@ -1,163 +1,83 @@
 # Roadmap beta
 
-Actualizado: 2026-09-12. Etapa alpha finalizada por el usuario. Este documento define los sprints de beta y el futuro pase a producción; no autoriza su ejecución inmediata. Cada sprint se iniciará cuando el usuario lo indique.
+Actualizado: 2026-09-13. Referencia alpha: 321542c. Este plan reemplaza la numeración y el alcance anteriores; la implementación descartada queda registrada en el histórico.
 
-## Objetivo y decisiones de esta etapa
+## Forma de trabajo
 
-Completar el circuito operativo, incorporar usuarios, probar con datos reales en el Supabase actual y publicar la beta en el Vercel personal. Cuando las pruebas estén aprobadas, pasar código, base de datos y web a GitHub, Supabase y Vercel de la empresa.
+Un sprint por entrega, con un resultado concreto y pequeño. Al terminar se informa qué cambió, cómo probarlo y qué falta; se espera la revisión del usuario antes de iniciar el siguiente. Si un sprint necesita demasiados cambios, se divide antes de implementarlo. No se ejecuta toda la tabla de una vez.
 
-- La beta usará la base actual, por decisión del usuario; no se creará una base beta separada como requisito.
-- El usuario dispone de un backup para reconstruir los datos. Antes de depender de él se comprobarán su formato, contenido y restauración.
-- Los movimientos de prueba podrán descartarse al preparar producción. Se definirá exactamente qué datos y usuarios conservar o reconstruir antes de cualquier limpieza.
-- Usuarios finales y usuarios de prueba se analizarán e implementarán durante la beta. La etiqueta de tester no implica automáticamente permisos de administrador ni aislamiento de datos.
-- Publicar en una cuenta personal es independiente del plan contratado: se revisará un plan de Vercel compatible con el uso empresarial.
-- El pase a la empresa es viable mediante transferencia de proyectos existentes o creación de proyectos empresariales y migración. La modalidad se elegirá antes del corte.
+La referencia es [FLUJO-FUNCIONAL.md](FLUJO-FUNCIONAL.md). No hay cierre diario ni control de caja. Todos los usuarios tendrán credenciales propias y facultades de administrador. Las decisiones abiertas se resuelven solo cuando afectan al siguiente entregable.
 
-## Secuencia
+## Incidencia prioritaria al retomar
 
-| Sprint | Resultado esperado | Dependencia |
+**BETA-01 — Compra obliga a confirmar pago y reparto en el mismo recorrido.** Reportada por el usuario el 2026-09-13; pendiente de reproducción y corrección. Revisarla antes de continuar con B3.
+
+- Comportamiento informado: al hacer una compra de producto, la aplicación fuerza a completar la confirmación de pago y la confirmación de reparto a la vez.
+- Resultado esperado: registrar la compra sin obligar a completar ambas confirmaciones en ese momento. Respetar las etapas del [flujo funcional](FLUJO-FUNCIONAL.md): compra, generación de reparto con importe enviado (total, parcial o cero) y recepción posterior.
+- Al retomar: reproducir los pasos exactos, identificar qué pantalla y controles fuerzan el recorrido y corregirlo con una prueba de regresión. No atribuir todavía la causa a una RPC ni confundir reparto de compras con retiro de una venta.
+- Esta anotación no cambia la regla de ventas que exige retiro al completar el pago. No se modifica el programa ahora, por indicación del usuario.
+
+## Sprints operativos
+
+| Sprint | Entregable y aceptación | Estado |
 | --- | --- | --- |
-| B0 | Cierre y referencia recuperable de alpha | Inicio de beta |
-| B1 | Reglas y controles de pagos, entregas y cierre diario | B0 |
-| B2 | Usuarios finales y de prueba con acceso controlado | B1 |
-| B3 | Base actual cargada con datos reales y restauración comprobada | B2 |
-| B4 | Beta accesible en Vercel personal | B3 |
-| B5 | Pruebas de usuarios y corrección de incidencias | B4 |
-| B6 | Preparación del entorno empresarial y ensayo de migración | B5 aprobado |
-| B7 | Publicación en producción y traspaso a la empresa | B6 |
+| B0 | Alpha recuperable en GitHub, referencia 321542c. | Completado |
+| B1 | Pendientes visibles en Repartos aunque tengan cierre histórico; recibidos excluidos y orden por proveedor conservado. Plan beta actualizado. Ver [detalle](sprints/B1.md). | Revisado por el usuario |
+| B2 | Cobros parciales en Ventas: importe inicial, abonos sucesivos e historial; ejemplo 100 → 40 + 40 + 20 con saldos 60, 20 y 0. Compatibilidad de ventas anteriores sin inventar pagos históricos. Ver [detalle](sprints/B2.md). | Habilitado y verificado en Supabase; revisión del usuario pendiente |
+| B3 | Alertas de cobros en Inicio: un clic abre el registro de importe, actualiza abonado y pendiente y retira la alerta al saldar. | Pendiente |
+| B4 | Estados de venta y retiro: Entregado/No pago incluye parciales; Pendiente de retirar mantiene saldo; Finalizada exige pago total y retiro. Sin modalidad de pago total antes de retirar. | Pendiente |
+| B5 | Cancelación de venta pendiente: vuelve a Stock, desaparece la venta y se revierten abonos, ganancias y comisiones. Finalizadas inmutables salvo IMEI. | Pendiente |
+| B6 | Deuda por proveedor: registrar abonos sucesivos e historial, mostrar saldos en Inicio y estadísticas y acceso rápido al pago. | Pendiente |
+| B7 | Pago al generar reparto: modal por pedido con total + deuda previa desglosados; usuario valida o modifica el importe, incluso cero. No duplicar deuda entre pedidos. | Pendiente |
+| B8 | Generar reparto crea unidades En reparto una sola vez y activa alerta en Inicio; crear compra todavía no crea unidades. Separar traslado de compras de entrega de ventas. | Pendiente |
+| B9 | Recepción desde Inicio: casillas por unidad, marcadas a Stock; no marcadas se retiran. Confirmar importe abonado por cada excluida incluso con pago parcial, anulando deuda no pagada y registrando crédito por lo pagado. | Pendiente |
+| B10 | Aplicación de saldo a favor del proveedor y conciliación de deuda, stock, alertas y estadísticas. | Pendiente |
+| B11 | Datos de unidades: fijar etapa de completar información; impedir retrocesos salvo cancelación de venta pendiente; IMEI siempre editable. | Pendiente |
 
-Los sprints expresan orden y entregables, sin estimaciones de duración todavía. Todos comienzan pendientes.
+Cada cambio de datos persistentes incluirá su migración, compatibilidad y comprobación transaccional antes de considerarse terminado. Un entregable con SQL solo preparado localmente se informará como pendiente de aplicación y validación, no como funcionalidad ya disponible en Supabase.
 
-## B0 — Cierre de alpha
+## Decisiones antes del sprint afectado
 
-**Alcance**
+- B4–B5: control de retiro y confirmación del retorno físico al cancelar una venta entregada; mantener la unidad reservada para impedir ventas duplicadas.
+- B6–B7: distribución del abono entre deuda anterior y pedidos nuevos. No asumir una prioridad de pago ni descontar automáticamente créditos sin definirla.
+- B8: confirmación de modales, interrupciones y reintentos; compatibilidad con unidades históricas y copia para WhatsApp.
+- B9: agrupación de la recepción y tratamiento del costo de envío de unidades excluidas.
+- B10: uso del saldo a favor en próximas compras o registro de devolución.
+- B11: momento de completar datos distintos del IMEI.
 
-- Revisar y guardar en Git los cambios de limpieza que quedaron sin commit.
-- Identificar una versión de referencia de alpha recuperable, con su documentación y validaciones.
-- Registrar limitaciones conocidas y acordar los criterios de aceptación de beta.
+## Usuarios, datos y publicación
 
-**Cierre:** código y documentos de alpha identificados en Git, con un punto de retorno verificable.
+| Sprint | Entregable y aceptación | Dependencia |
+| --- | --- | --- |
+| B12 | Inicio y cierre de sesión, recuperación y bloqueo de operaciones sin sesión mediante RLS/RPC. Todos los autenticados habilitados son administradores. | B11 revisado |
+| B13 | Alta y desactivación de usuarios finales y de prueba con credenciales propias; distinguir cuenta de acceso de vendedor. Comprobar acceso directo a API y sesiones simultáneas. | B12 |
+| B14 | Revisar backup del usuario y ensayar restauración en entorno temporal; preparar carga repetible y comprobar qué datos, usuarios y archivos incluye. | B13 |
+| B15 | Respaldar estado actual y cargar datos reales en el Supabase actual; conciliar cantidades, relaciones, costos y saldos. Precisar limpieza de datos ficticios antes de ejecutarla. | B14 |
+| B16 | Publicar candidato en GitHub y Vercel personal, configurar conexión y sesiones, revisar plan compatible con uso empresarial y probar acceso de testers. | B15 |
+| B17 | Primera ronda de pruebas del circuito completo, móvil y escritorio; incidencias con versión y pasos. Corregir por tandas pequeñas y repetir solo cobertura afectada. | B16 |
 
-## B1 — Pagos, entregas y cierre diario
+Se conserva el backup original. No se exige otra base para la beta: se utiliza la actual por decisión del usuario. Definir cómo reconstruir los datos entre rondas y qué movimientos se descartarán evita confundir pruebas con datos que deban conservarse. Las vistas previas de despliegue deben tener un destino de datos explícito.
 
-**Análisis**
+## Producción en la empresa
 
-- Distinguir cobros de ventas y pagos a proveedores. Definir si la beta requiere pagos parciales, saldos pendientes, historial de pagos y correcciones.
-- Definir qué significa entrega confirmada, cómo se relaciona con el pago y dónde estarán sus controles.
-- Definir qué incluye el cierre diario: pedidos, ventas, cobros y pendientes; condiciones para cerrar, reintentos y eventual reapertura.
-- Revisar las RPC existentes: el cierre actual solo marca pedidos del día y no representa por sí solo un cierre de caja.
-- Acordar quién podrá ejecutar cada acción para implementar esos permisos en B2.
+| Sprint | Entregable y aceptación | Dependencia |
+| --- | --- | --- |
+| B18 | Preparar cuentas empresariales de GitHub, Supabase y Vercel; elegir transferencia o migración, propietarios, facturación y destino de datos de prueba. | B17 aprobado |
+| B19 | Ensayar migración de esquema, datos, cuentas y archivos; configurar variables, dominio y autenticación. Documentar corte, pausa de escrituras, respaldo y vuelta atrás. | B18 |
+| B20 | Ejecutar el traspaso aprobado: repositorio GitHub, Supabase y web Vercel bajo la empresa; validar circuito, sesiones y totales antes del uso habitual. | B19 revisado |
+| B21 | Verificar primeras operaciones, documentar responsables y recuperación; separar o retirar beta personal conservando respaldos. | B20 |
 
-**Implementación prevista**
+La producción usará los datos iniciales acordados: reconstrucción desde backup o conservación de registros aprobados. No se presupone que un backup de tablas incluya usuarios o archivos. Si se mantiene beta personal, quedará separada de producción.
 
-- Incorporar las reglas acordadas, sus controles y, si corresponde, nuevas migraciones y funciones transaccionales.
-- Conectar deuda a proveedores y métricas relacionadas según el alcance acordado.
-- Revisar la diferencia actual entre compras de Inicio, que incluyen borradores, y Reportes, que solo cuenta confirmadas.
-- Actualizar las reglas de la app y las pruebas de los estados y cálculos afectados.
+## Pendientes conservados
 
-**Cierre:** circuito definido y probado localmente; pagos, entregas y cierre tienen un significado explícito y controles utilizables. Las decisiones funcionales se acuerdan antes de implementarlas.
-
-## B2 — Usuarios finales y usuarios de prueba
-
-**Análisis**
-
-- Definir tipos de usuario, permisos y alcance de los datos compartidos. Evaluar administrador, operador y tester sin fijar todavía la matriz definitiva.
-- Acordar altas por invitación o registro, inicio y cierre de sesión, recuperación de acceso y desactivación.
-- Distinguir la cuenta de acceso del vendedor comercial existente; decidir si se vinculan.
-- Definir cómo identificar movimientos de prueba y quién realizó pagos, entregas y cierres.
-
-**Implementación prevista**
-
-- Incorporar autenticación y administración de usuarios según el flujo acordado.
-- Adaptar RLS, permisos y RPC al usuario autenticado. El acceso anónimo actual debe dejar de permitir operaciones comerciales fuera de los permisos acordados.
-- Crear cuentas finales y de prueba; aplicar sus permisos en la base además de en la interfaz.
-- Definir qué cuentas se conservarán, migrarán o volverán a invitar al pasar a producción.
-
-**Cierre:** accesos permitidos y rechazados comprobados para cada perfil, incluyendo llamadas directas a la API. Usuarios desactivados o sin sesión no pueden operar fuera del alcance acordado.
-
-## B3 — Datos reales en el Supabase actual
-
-**Alcance**
-
-- Revisar el backup aportado: tablas, relaciones, fechas, importes y posibles datos de usuarios o archivos. Identificar qué contiene y qué queda fuera.
-- Comprobar su restauración en un entorno temporal adecuado, sin sobrescribir la base actual durante el ensayo.
-- Preparar una carga repetible y compatible con el esquema posterior a B1/B2. El backup original se conserva; cualquier transformación queda documentada.
-- Respaldar el estado previo y acordar el tratamiento de los catálogos ficticios existentes.
-- Cargar los datos reales en la base actual, respetando relaciones y trazabilidad.
-- Comparar cantidades, stock, compras, ventas, costos y saldos con el origen.
-- Definir cómo restaurar los datos entre rondas y cómo evitar mezclar pruebas con operaciones que deban conservarse.
-
-**Cierre:** carga reconciliada y procedimiento de reconstrucción comprobado. Borrar datos no forma parte de esta planificación ejecutada: la limpieza concreta se revisará cuando corresponda.
-
-## B4 — Publicación de beta en Vercel personal
-
-**Alcance**
-
-- Guardar y subir a GitHub la versión candidata de beta.
-- Revisar el plan de Vercel aplicable al uso empresarial y configurar el proyecto en la cuenta personal.
-- Configurar las variables para el Supabase actual y comprobar que no se publiquen credenciales secretas.
-- Publicar y verificar acceso de testers, sesiones y operaciones desde la dirección de beta.
-- Acordar qué rama alimenta la beta y cómo revisar cambios antes de desplegarlos. Las vistas previas no deberán modificar datos compartidos de forma inadvertida.
-- Preparar un canal de incidencias y una identificación visible o consultable de la versión probada.
-
-**Cierre:** testers autorizados acceden sin depender del equipo local; conexión y circuito básico funcionan en el despliegue.
-
-## B5 — Pruebas beta y estabilización
-
-**Alcance**
-
-- Probar catálogos, compras, recepción, stock, ventas, pagos, entregas, cierre diario y Reportes con los datos cargados.
-- Probar usuarios finales y de prueba, sesiones simultáneas, doble envío, venta concurrente de una unidad, permisos y recuperación ante errores.
-- Revisar notebook, tablet y celular, diálogos, navegación por teclado y exportaciones.
-- Reponer la prueba de navegador del circuito completo, que reemplaza al antiguo script retirado.
-- Registrar incidencias con versión, pasos, resultado esperado/obtenido y prioridad; corregir y repetir la cobertura afectada.
-- Completar la revisión de Reportes con el usuario y acordar qué alertas de Inicio entran en esta beta.
-- Revisar dependencias y resolver los problemas que impidan publicar producción.
-
-**Cierre:** escenarios críticos aprobados por los responsables, sin incidencias bloqueantes; pendientes menores expresamente aceptados. Repetir este sprint si las pruebas detectan nuevos bloqueos.
-
-## B6 — Preparación de producción empresarial
-
-**Alcance**
-
-- Preparar organización/repositorio de GitHub, organización de Supabase y equipo de Vercel de la empresa, con propietarios y facturación definidos.
-- Elegir entre transferir proyectos existentes o crear proyectos nuevos y migrar. Revisar requisitos, accesos e integraciones de la opción elegida.
-- Decidir el destino de cada conjunto de datos: descartar movimientos de prueba, reconstruir desde el backup o conservar registros aprobados.
-- Ensayar la migración del esquema final, funciones, políticas y datos. Incluir usuarios, archivos y configuración si existen; no asumir que un backup de tablas cubre todo.
-- Preparar variables de entorno, dominio si se utiliza, enlaces de autenticación y permisos de despliegue desde el GitHub empresarial.
-- Definir ventana de cambio, pausa de escrituras, respaldo final, comprobaciones de aceptación y procedimiento de vuelta atrás.
-- Acordar si el entorno personal se conserva como beta futura; en ese caso deberá quedar separado de los datos de producción.
-
-**Cierre:** ensayo satisfactorio, datos iniciales y cuentas de producción definidos, y plan concreto de corte y recuperación listo para revisión.
-
-## B7 — Pase a producción y traspaso
-
-**Alcance**
-
-- Ejecutar el plan de corte aprobado, evitando escrituras simultáneas en dos bases durante la migración.
-- Transferir o migrar el repositorio a GitHub empresarial y verificar el historial y los permisos.
-- Transferir o migrar Supabase a la organización empresarial y comprobar datos, políticas, funciones y cuentas.
-- Transferir o publicar la web en Vercel empresarial, apuntando al Supabase definitivo y al repositorio correcto.
-- Validar el circuito operativo, las sesiones, los enlaces y los totales antes de abrir el uso habitual.
-- Confirmar propiedad empresarial de proyectos y dominio, si corresponde; revisar accesos personales y credenciales según el traspaso elegido.
-- Retirar o separar los entornos de beta después de aceptar producción y de conservar los respaldos necesarios.
-- Documentar recuperación, actualizaciones y responsables; seguir las primeras operaciones reales para detectar incidencias.
-
-**Cierre:** GitHub, Supabase y Vercel bajo control de la empresa; aplicación validada en producción, con datos iniciales aceptados y recuperación documentada.
-
-## Pendientes conservados para priorizar
-
-Estos puntos no se pierden al sustituir el roadmap anterior. Su inclusión en beta dependerá de su impacto y del alcance acordado:
-
-- Ayuda de reglas y métricas para usuarios.
-- Normalizar RAM/ROM en detalle_pedido conservando compatibilidad con el JSON de observaciones.
+- Ayuda de reglas y métricas; normalización RAM/ROM conservando compatibilidad con observaciones.
 - Decidir si se recuperan gráficos configurables; sus registros remotos siguen existiendo.
-- Adaptación de diálogos largos y manejo consistente del foco.
-- Ampliar validación de contenido y paginación de PDF.
-- Revisar los avisos históricos de dependencias con un audit actualizado; no tratarlos como diagnóstico vigente sin comprobarlo.
+- Diálogos largos, foco, contenido y paginación PDF; revisión actualizada de dependencias antes de producción.
 
-## Seguimiento de los sprints
+Al cerrar cada sprint se actualizan reglas, documentación afectada e histórico con validación y limitaciones. No se publica ni se pasa al siguiente sprint como consecuencia automática de terminar una entrega local.
 
-Al iniciar un sprint se detallarán sus tareas y decisiones pendientes. Al cerrarlo se actualizarán [las reglas](REGLAS-APP.md), las especificaciones afectadas y [el historial](historico-proyecto.md), registrando pruebas, limitaciones y versión. Un cambio de alcance debe quedar reflejado aquí.
 
-Este roadmap no inicia ahora cargas, borrados, creación de usuarios, despliegues, transferencias ni migraciones.
+## Ajuste de Compras — 2026-09-14
+
+[Formulario y opciones por categoría](sprints/COMPRAS-OPCIONES.md) implementados localmente. Aplicado y verificado en Supabase el 2026-09-14, con B2 previamente existente. No se inició B3. Cálculo de envío y opciones definitivas pendientes de la explicación del usuario.

@@ -35,8 +35,10 @@ test("Agrupa por ID aun con nombres iguales y desempata por nombre e ID",()=>{
  const raw=fixture();raw.suppliers[1].nombre="Jacinto";raw.suppliers[1].horario_desde="15:00:00";add(raw,1,2);add(raw,2,1);
  assert.deepEqual(groups(raw).map(x=>x.supplierId),[1,2]);
 });
-test("Recibidos y cerrados desaparecen; borradores y pendientes de otros dias permanecen",()=>{
+test("Solo recibidos desaparecen; pendientes de otros dias permanecen aun con cierre historico",()=>{
  const raw=fixture();add(raw,1,1,{estado:"RECIBIDO"});add(raw,2,2,{cerrado_en:"2026-09-11"});add(raw,3,3,{estado:"ENVÍO",fecha_estimada:"2026-09-09"});
+ assert.deepEqual(groups(raw).map(x=>x.name),["Anselmo","Roman"]);
+ raw.orders[1].estado="RECIBIDO";
  assert.deepEqual(groups(raw).map(x=>x.name),["Anselmo"]);
 });
 test("RAM/ROM, notas, cantidades y costo sobreviven al snapshot y a la derivacion",()=>{

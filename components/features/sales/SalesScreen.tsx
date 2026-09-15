@@ -27,6 +27,21 @@ export default function SalesScreen() {
   const selected = available.find(unit => String(unit.databaseId) === unitId);
   // La RPC reutiliza este UUID en reintentos y bloquea la unidad para evitar ventas dobles.
   const requestId = useRef("");
+  const paymentRequest = useRef("");
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const paymentsReady = Array.isArray(raw.salePayments);
+  const missingSaleRequirements = [!available.length && "una unidad en stock", !raw.clients.length && "un cliente", !raw.sellers.length && "un vendedor"].filter(Boolean);
+  function openDetail(id: number) {
+    setDetailId(id); setPaymentAmount(""); paymentRequest.current = crypto.randomUUID(); setDirty(false); setError("");
+  }
+  function addPayment(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!detail || !paymentsReady) return;
+    const form = new FormData(event.currentTarget);
+    void run(() => runOperation("pgl_add_sale_payment", { p_id: detail.id, p_amount: Number(paymentAmount), p_request: paymentRequest.current, p_delivered: form.get("delivered") === "on" }), () => {
+      setPaymentAmount(""); setDirty(false); paymentRequest.current = crypto.randomUUID();
+    });
+  }
   const matches = (sale: Sale) => `${sale.id} ${sale.product} ${sale.code} ${sale.client} ${sale.seller}`.toLowerCase().includes(search.toLowerCase()) && (status === "TODOS" || sale.status === status);
   const salesToday = sales.filter(sale => sale.date === today && matches(sale));
   const history = sales.filter(sale => sale.date !== today && matches(sale));
@@ -37,24 +52,38 @@ export default function SalesScreen() {
   }
   function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!paymentsReady) return;
     if (!selected) { setError("La unidad seleccionada ya no está disponible."); return; }
     const form = new FormData(event.currentTarget);
-    void run(() => runOperation("pgl_create_sale", { p_unit: selected.databaseId, p_client: Number(form.get("client")), p_seller: Number(form.get("seller")),
-      p_date: String(form.get("date")), p_price: Number(form.get("price")), p_commission: Number(form.get("commission")), p_paid: form.get("paid") === "on", p_request: requestId.current,
-    }), id => { setCreating(false); setDirty(false); setDetailId(Number(id)); });
+    void run(() => runOperation("pgl_create_sale_partial", { p_unit: selected.databaseId, p_client: Number(form.get("client")), p_seller: Number(form.get("seller")),
+      p_date: String(form.get("date")), p_price: Number(form.get("price")), p_commission: Number(form.get("commission")), p_amount: Number(form.get("amount")), p_delivered: form.get("delivered") === "on", p_request: requestId.current,
+    }), id => { setCreating(false); setDirty(false); openDetail(Number(id)); });
   }
   function table(source: Sale[]) {
-    return source.length ? <PagedTable><thead><tr><th>Venta / unidad</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th>Total</th><th>Pago</th><th></th></tr></thead><tbody>{source.map(sale => <tr key={sale.id} onClick={() => { setDetailId(sale.id); setError(""); }}><td className="mono">#{sale.id}</td><td>{sale.client}</td><td>{formatDate(sale.date)}</td><td><span className={`badge ${sale.status === "ENTREGADA" ? "green" : "violet"}`}>{sale.status === "ENTREGADA" ? "Entregada" : "En reparto"}</span></td><td>{formatUsd(sale.priceUsd)}</td><td>{sale.paid ? "Verificado" : "Pendiente"}</td><td><button className={styles.rowAction} aria-label={`Ver venta ${sale.id}`}><Eye size={14} /> Ver</button></td></tr>)}</tbody></PagedTable> : <div className={styles.empty}>No hay ventas que coincidan con esta búsqueda.</div>;
+    return source.length ? <PagedTable><thead><tr><th>Venta / unidad</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th>Total</th><th>Pago</th><th></th></tr></thead><tbody>{source.map(sale => <tr key={sale.id} onClick={() => { openDetail(sale.id); }}><td className="mono">#{sale.id}</td><td>{sale.client}</td><td>{formatDate(sale.date)}</td><td><span className={`badge ${sale.status === "ENTREGADA" ? "green" : "violet"}`}>{sale.status === "ENTREGADA" ? "Entregada" : "En reparto"}</span></td><td>{formatUsd(sale.priceUsd)}</td><td>{formatUsd(sale.paidUsd)} abonado · {formatUsd(sale.pendingUsd)} pendiente</td><td><button className={styles.rowAction} aria-label={`Ver venta ${sale.id}`}><Eye size={14} /> Ver</button></td></tr>)}</tbody></PagedTable> : <div className={styles.empty}>No hay ventas que coincidan con esta búsqueda.</div>;
   }
   return <div className={`view ${layout.page}`}>
-    <PageHeader title="Ventas" action={<button className={`primary-btn ${layout.headAction}`} disabled={!available.length || !raw.clients.length || !raw.sellers.length} onClick={() => { setUnitId(String(available[0]?.databaseId ?? "")); requestId.current = crypto.randomUUID(); setCreating(true); setDirty(false); setError(""); }}><Plus size={16} /> Nueva venta</button>} />
+    <PageHeader title="Ventas" action={<button className={`primary-btn ${layout.headAction}`} disabled={!paymentsReady || !available.length || !raw.clients.length || !raw.sellers.length} onClick={() => { setUnitId(String(available[0]?.databaseId ?? "")); requestId.current = crypto.randomUUID(); setCreating(true); setDirty(false); setError(""); }}><Plus size={16} /> Nueva venta</button>} />
+    {!paymentsReady && <p role="status">El registro de cobros todavía no está habilitado. Podés consultar las ventas existentes.</p>}
+    {paymentsReady && missingSaleRequirements.length > 0 && <p role="status">Para crear una venta necesitás cargar: {missingSaleRequirements.join(", ")}. Los clientes y vendedores se cargan en Datos.</p>}
     <div className={layout.toolbar}><label className={layout.searchWrap}><Search size={15} /><input className="search" aria-label="Buscar ventas" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar venta, cliente o unidad…" /></label><select className="filter" aria-label="Estado de venta" value={status} onChange={e => setStatus(e.target.value as typeof status)}><option value="TODOS">Todos los estados</option><option value="REPARTO">En reparto</option><option value="ENTREGADA">Entregada</option></select></div>
-    <WorkspaceTabs labels={["Ventas de hoy", "Historial"]}>    <section className="panel"><header className="panel-head"><div><span className="eyebrow">{formatDate(today)}</span><h2>Ventas de hoy</h2></div><span className="badge blue">{salesToday.length} ventas</span></header><div className="table-wrap">{table(salesToday)}</div></section>
+    <WorkspaceTabs labels={["Ventas de hoy", "Historial"]}>
+    <section className="panel"><header className="panel-head"><div><span className="eyebrow">{formatDate(today)}</span><h2>Ventas de hoy</h2></div><span className="badge blue">{salesToday.length} ventas</span></header><div className="table-wrap">{table(salesToday)}</div></section>
     <section className="panel"><header className="panel-head"><h2>Historial</h2><span className="badge muted-badge">{history.length} resultados</span></header><div className="table-wrap">{table(history)}</div></section>
     </WorkspaceTabs>
     {detail && !creating && <div className={styles.modalOverlay}><section className={styles.modal} role="dialog" aria-modal="true" aria-label={`Venta ${detail.id}`}><header className={styles.modalHeader}><h2>Venta #{detail.id}</h2><button className={styles.close} aria-label="Cerrar venta" disabled={busy} onClick={close}><X size={20} /></button></header>
-      <div className={styles.detailGrid}>{[["Cliente",detail.client],["Vendedor",detail.seller],["Fecha de venta",formatDate(detail.date)],["Producto",detail.product],["Unidad / serie",detail.unitId + " · " + (detail.code || "Sin código")],["Total",formatUsd(detail.priceUsd)],["Costo con envío",formatUsd(detail.costUsd)],["Comisión",formatUsd(detail.commissionUsd)],["Ganancia",formatUsd(detail.priceUsd-detail.costUsd-detail.commissionUsd)],["Estado",detail.status],["Pago",detail.paid ? "Verificado" : "Pendiente"],["Entrega",formatDate(detail.deliveredAt)]].map(([label,value]) => <div className={styles.detailItem} key={label}><small>{label}</small><strong>{value}</strong></div>)}</div>
-      <div className={styles.detailBody}>{error && <p role="alert" className="operation-error">{error}</p>}<button className={styles.cancel} disabled={busy} onClick={() => void run(() => runOperation("pgl_set_payment", { p_id: detail.id, p_paid: !detail.paid }))}>{detail.paid ? "Marcar pago pendiente" : "Verificar pago"}</button></div>
+      <div className={styles.detailGrid}>{[["Cliente",detail.client],["Vendedor",detail.seller],["Fecha de venta",formatDate(detail.date)],["Producto",detail.product],["Unidad / serie",detail.unitId + " · " + (detail.code || "Sin código")],["Total",formatUsd(detail.priceUsd)],["Costo con envío",formatUsd(detail.costUsd)],["Comisión",formatUsd(detail.commissionUsd)],["Ganancia",formatUsd(detail.priceUsd-detail.costUsd-detail.commissionUsd)],["Estado",detail.status],["Abonado",formatUsd(detail.paidUsd)],["Pendiente",formatUsd(detail.pendingUsd)],["Entrega",formatDate(detail.deliveredAt)]].map(([label,value]) => <div className={styles.detailItem} key={label}><small>{label}</small><strong>{value}</strong></div>)}</div>
+      <div className={styles.detailBody}>
+        <h3>Historial de abonos</h3>
+        {detail.openingPaidUsd > 0 && <p>Saldo inicial registrado: {formatUsd(detail.openingPaidUsd)}. Sin fecha ni desglose de abonos anteriores.</p>}
+        {detail.payments.length ? <ul>{detail.payments.map(payment => <li key={payment.id}>{formatDate(payment.registrado_en)} · {formatUsd(payment.importe_usd)}</li>)}</ul> : <p>No hay abonos individuales registrados.</p>}
+        {paymentsReady && detail.pendingUsd > 0 && <form onSubmit={addPayment} onChange={() => setDirty(true)}><fieldset disabled={busy} className="form-fields">
+          <div className={styles.field}><label htmlFor="payment-amount">Nuevo abono USD</label><input id="payment-amount" type="number" min="0.01" max={detail.pendingUsd} step="0.01" required value={paymentAmount} onChange={event => setPaymentAmount(event.target.value)} /></div>
+          {detail.status !== "ENTREGADA" && <label className={styles.check}><input name="delivered" type="checkbox" required={Number(paymentAmount) >= detail.pendingUsd} />Confirmo que el cliente retiró la unidad (obligatorio para completar el pago).</label>}
+          <button className="primary-btn" type="submit">{busy ? "Guardando…" : "Registrar abono"}</button>
+        </fieldset></form>}
+        {error && <p role="alert" className="operation-error">{error}</p>}
+      </div>
     </section></div>}
     {creating && <div className={styles.modalOverlay}><section className={styles.modal} role="dialog" aria-modal="true" aria-label="Registrar venta"><header className={styles.modalHeader}><h2>Registrar venta</h2><button className={styles.close} aria-label="Cerrar venta" disabled={busy} onClick={close}><X size={20} /></button></header><form onSubmit={create} onChange={() => setDirty(true)}><fieldset disabled={busy} className="form-fields"><div className={styles.form}><div className={styles.formGrid}>
       <div className={`${styles.field} ${styles.wide}`}><label htmlFor="unit">Unidad disponible</label><select id="unit" value={unitId} onChange={e => setUnitId(e.target.value)} required><option value="" disabled>Seleccionar unidad</option>{available.map(unit => <option key={unit.id} value={unit.databaseId}>{unit.id} · {unit.product} · {unit.code || unit.color}</option>)}</select></div>
@@ -64,7 +93,8 @@ export default function SalesScreen() {
       <div className={styles.field}><label htmlFor="price">Precio de venta USD</label><input id="price" name="price" type="number" min="0" step="0.01" required key={unitId} defaultValue={selected?.salePriceUsd ?? ""} /></div>
       <div className={styles.field}><label htmlFor="commission">Comisión USD</label><input id="commission" name="commission" type="number" min="0" step="0.01" required defaultValue="0" /></div>
       <div className={styles.field}><label htmlFor="date">Fecha de venta</label><input id="date" name="date" type="date" required defaultValue={today} min={selected?.receivedAt} max={today} /></div>
-      <div className={styles.field}><label htmlFor="paid">Pago verificado</label><div className={styles.check}><input id="paid" name="paid" type="checkbox" /><span>Confirmar que el pago fue recibido.</span></div></div>
-    </div>{error && <p role="alert" className="operation-error">{error}</p>}<p>La unidad quedará reservada en Reparto hasta confirmar su entrega.</p></div><footer className={styles.actions}><button className={styles.cancel} type="button" onClick={close}>Cancelar</button><button className="primary-btn" type="submit">{busy ? "Guardando…" : "Guardar venta"}</button></footer></fieldset></form></section></div>}
+      <div className={styles.field}><label htmlFor="amount">Importe abonado USD</label><input id="amount" name="amount" type="number" min="0" step="0.01" required defaultValue="0" /></div>
+      <label className={styles.check}><input name="delivered" type="checkbox" />Confirmo que el cliente retiró la unidad.</label>
+    </div>{error && <p role="alert" className="operation-error">{error}</p>}<p>Indicá cero si no hubo pago. El pago total requiere confirmar que el cliente retiró la unidad.</p></div><footer className={styles.actions}><button className={styles.cancel} type="button" onClick={close}>Cancelar</button><button className="primary-btn" type="submit">{busy ? "Guardando…" : "Guardar venta"}</button></footer></fieldset></form></section></div>}
   </div>;
 }
