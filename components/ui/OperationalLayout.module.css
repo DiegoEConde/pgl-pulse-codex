@@ -4,7 +4,7 @@
 .page > :global(.panel) { margin: 0; min-width: 0; padding: 24px; }
 .page > :global(.panel) > :global(.panel-head) { min-height: 44px; margin-bottom: 20px; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0; }
-.toolbar :global(.search), .toolbar :global(.filter) { height: 42px; font-size: 13px; }
+.toolbar :global(.search), .toolbar :global(.filter) { height: 42px; font-size: 15px; }
 .searchWrap { position: relative; flex: 1 1 260px; max-width: 420px; min-width: 0; }
 .searchWrap svg { position: absolute; left: 13px; top: 50%; color: var(--dim); transform: translateY(-50%); }
 .searchWrap input { width: 100%; min-width: 0; padding-left: 39px; }
@@ -17,10 +17,10 @@
 
 .total { display: grid; gap: 6px; justify-items: end; padding: 10px 18px; border-right: 2px solid #58aaff; background: linear-gradient(270deg, rgba(51,156,255,.12), transparent); }
 .total strong { color: #b8eaff; font: 700 clamp(36px, 4vw, 52px)/1 var(--font-mono); text-shadow: 0 0 10px rgba(88,170,255,.8), 0 0 28px rgba(51,156,255,.45); }
-.total span { color: #83bded; font: 10px var(--font-mono); letter-spacing: .12em; text-transform: uppercase; }
-@media (max-width: 680px) { .total { padding: 8px 12px; } .total span { font-size: 9px; letter-spacing: .06em; } }
+.total span { color: #83bded; font: 13px var(--font-mono); letter-spacing: 0; text-transform: uppercase; }
+@media (max-width: 680px) { .total { padding: 8px 12px; } .total span { font-size: 12px; letter-spacing: 0; } }
 
-.page > p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.page > p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
 .page > :global(.operation-error) { color: var(--red); }
 
 .headAction {
@@ -32,7 +32,7 @@
   color: #edf8ff;
   font-size: 0.98rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   background: linear-gradient(135deg, #0d1c2d 0%, #143d63 100%);
   border: 1px solid rgba(88, 170, 255, 0.9);
   box-shadow: 0 0 0 1px rgba(88, 170, 255, 0.35), 0 14px 28px rgba(34, 120, 255, 0.24);

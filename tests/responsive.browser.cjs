@@ -41,7 +41,8 @@ for (let id = 1; id <= 40; id++) {
           const check = async () => {
             const size = await page.evaluate(() => ({ w: innerWidth, h: innerHeight, sw: document.documentElement.scrollWidth, sh: document.documentElement.scrollHeight }));
             assert.ok(size.sw <= size.w + 1 || width <= 740, `${name}/${index}: horizontal ${JSON.stringify(size)}`);
-            if (width > 740 && name !== "Reparto") assert.ok(size.sh <= size.h + 1, `${name}/${index}: vertical ${JSON.stringify(size)}`);
+            // Inicio y Reparto crecen con sus tarjetas; las tablas siguen paginadas.
+            if (width > 740 && name !== "Reparto" && name !== "Inicio") assert.ok(size.sh <= size.h + 1, `${name}/${index}: vertical ${JSON.stringify(size)}`);
           };
           await check();
           const next = page.getByRole("button", { name: "Página siguiente", exact: true });

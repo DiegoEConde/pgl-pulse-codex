@@ -218,9 +218,9 @@ button {
   display: flex;
   justify-content: space-between;
   color: #6e8093;
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: .09em;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 .metric-icon {
@@ -239,13 +239,13 @@ button {
   display: block;
   margin-top: 15px;
   font-size: 29px;
-  letter-spacing: -.04em;
+  letter-spacing: 0;
 }
 .metric small {
   display: block;
   margin-top: 8px;
   color: var(--dim);
-  font-size: 11px;
+  font-size: 14px;
 }
 .panel {
   padding: 22px;
@@ -267,7 +267,7 @@ button {
 .panel-head h2 {
   margin: 5px 0 0;
   font-size: 20px;
-  letter-spacing: -.03em;
+  letter-spacing: 0;
   color: #edf8ff;
 }
 .primary-btn {
@@ -280,7 +280,7 @@ button {
   background: linear-gradient(135deg,#0d1c2d,#143d63);
   border: 1px solid rgba(88,170,255,.9);
   border-radius: 10px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   box-shadow: 0 0 0 1px rgba(88,170,255,.35),0 12px 26px rgba(34,120,255,.22);
   transition: transform .18s ease,box-shadow .18s ease,border-color .18s ease;
@@ -298,7 +298,7 @@ button {
   border: 1px solid var(--line);
   border-radius: 10px;
   outline: none;
-  font-size: 13px;
+  font-size: 15px;
 }
 .search:focus {
   border-color: var(--blue);
@@ -310,7 +310,7 @@ button {
   background: #111923;
   border: 1px solid var(--line);
   border-radius: 10px;
-  font-size: 12px;
+  font-size: 14px;
 }
 .filter:hover,.filter:focus {
   background: #111923;
@@ -339,13 +339,13 @@ th,td {
 th {
   color: #56687a;
   background: rgba(255,255,255,.012);
-  font: 500 10px 'IBM Plex Mono',monospace;
-  letter-spacing: .08em;
+  font: 500 13px 'IBM Plex Mono',monospace;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 td {
   color: #a9b7c5;
-  font-size: 13px;
+  font-size: 15px;
 }
 tbody tr {
   cursor: pointer;
@@ -362,7 +362,7 @@ tbody tr:last-child td {
 }
 .product-cell strong {
   color: #e0eaf3;
-  font-size: 13px;
+  font-size: 15px;
 }
 .product-cell small {
   margin-top: 4px;
@@ -374,8 +374,8 @@ tbody tr:last-child td {
   gap: 6px;
   padding: 5px 8px;
   border-radius: 999px;
-  font: 500 9px 'IBM Plex Mono',monospace;
-  letter-spacing: .08em;
+  font: 500 12px 'IBM Plex Mono',monospace;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 .badge:before {

@@ -3,13 +3,13 @@
 .catalogCard:hover { transform: translateY(-3px); border-color: #31516d; box-shadow: 0 16px 35px rgba(0,0,0,.15); }
 .cardIcon { display: grid; place-items: center; width: 43px; height: 43px; flex-shrink: 0; color: var(--blue); background: rgba(51,156,255,.08); border: 1px solid rgba(51,156,255,.13); border-radius: 12px; }
 .cardHeading { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-.catalogCard h2 { margin: 0; font-size: 24px; letter-spacing: -.03em; }
-.catalogCard p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
-.cardFooter { display: flex; align-items: center; gap: 10px; margin-top: auto; padding-top: 21px; color: var(--cyan); font: 10px var(--font-mono); }
+.catalogCard h2 { margin: 0; font-size: 24px; letter-spacing: 0; }
+.catalogCard p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.55; }
+.cardFooter { display: flex; align-items: center; gap: 10px; margin-top: auto; padding-top: 21px; color: var(--cyan); font: 13px var(--font-mono); }
 .cardFooter b { color: var(--cyan); font-size: 24px; }
-.back { display: inline-flex; align-items: center; gap: 7px; width: max-content; min-height: 42px; padding: 8px 12px; color: #8da1b5; background: transparent; border: 1px solid var(--line); border-radius: 9px; font-size: 10px; }
+.back { display: inline-flex; align-items: center; gap: 7px; width: max-content; min-height: 42px; padding: 8px 12px; color: #8da1b5; background: transparent; border: 1px solid var(--line); border-radius: 9px; font-size: 13px; }
 .back:hover { color: #d8e8f6; border-color: #31516d; background: rgba(51,156,255,.04); }
-.rowAction { display: inline-flex; align-items: center; gap: 5px; padding: 6px 9px; color: #83bded; background: transparent; border: 1px solid var(--line-soft); border-radius: 8px; font-size: 10px; }
+.rowAction { display: inline-flex; align-items: center; gap: 5px; padding: 6px 9px; color: #83bded; background: transparent; border: 1px solid var(--line-soft); border-radius: 8px; font-size: 13px; }
 .rowAction:hover { background: rgba(51,156,255,.05); border-color: #31516d; }
 .empty { padding: 55px; color: var(--muted); text-align: center; }
 .overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px; background: rgba(2,5,9,.76); backdrop-filter: blur(8px); }
@@ -19,7 +19,7 @@
 .close { display: grid; place-items: center; width: 34px; height: 34px; color: var(--muted); background: transparent; border-radius: 9px; }
 .form { display: grid; gap: 15px; padding: 24px; }
 .field { display: grid; gap: 7px; }
-.field label { color: #7f90a2; font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+.field label { color: #7f90a2; font-size: 13px; font-weight: 600; letter-spacing: 0; text-transform: uppercase; }
 .field input, .field select, .field textarea { width: 100%; padding: 11px 12px; color: var(--text); background: #0b1118; border: 1px solid var(--line); border-radius: 9px; outline: none; }
 .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(51,156,255,.08); }
 .actions { display: flex; justify-content: flex-end; gap: 9px; padding: 0 24px 24px; }
@@ -37,7 +37,7 @@
   color: #edf8ff;
   font-size: 0.98rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   background: linear-gradient(135deg, #0d1c2d 0%, #143d63 100%);
   border: 1px solid rgba(88, 170, 255, 0.9);
   box-shadow: 0 0 0 1px rgba(88, 170, 255, 0.35), 0 14px 28px rgba(34, 120, 255, 0.24);
@@ -52,7 +52,7 @@
 .searchSection { display: grid; gap: 10px; min-width: 0; }
 .textCell { min-width: 180px; max-width: 280px; white-space: normal; overflow-wrap: anywhere; line-height: 1.5; }
 .field textarea { min-height: 80px; resize: vertical; }
-.formError { margin: 0; color: var(--red); font-size: 13px; }
+.formError { margin: 0; color: var(--red); font-size: 15px; }
 
 
 .formFields { border: 0; padding: 0; margin: 0; min-width: 0; }
