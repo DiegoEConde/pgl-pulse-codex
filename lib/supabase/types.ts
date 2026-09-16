@@ -14,6 +14,18 @@ export type Database = {
   }
   public: {
     Tables: {
+      categorias: {
+        Row: { id: number; nombre: string };
+        Insert: { id?: number; nombre: string };
+        Update: { nombre?: string };
+        Relationships: [];
+      };
+      categoria_caracteristica: {
+        Row: { id: number; categoria_id: number; clave: string; etiqueta: string; tipo: "lista" | "entero"; valores: string[]; minimo: number | null; maximo: number | null; obligatoria: boolean };
+        Insert: { categoria_id: number; clave: string; etiqueta: string; tipo?: "lista" | "entero"; valores?: string[]; minimo?: number | null; maximo?: number | null; obligatoria?: boolean };
+        Update: { etiqueta?: string; valores?: string[]; obligatoria?: boolean };
+        Relationships: [{ foreignKeyName: "categoria_caracteristica_categoria_id_fkey"; columns: ["categoria_id"]; isOneToOne: false; referencedRelation: "categorias"; referencedColumns: ["id"] }];
+      };
       compra_opcion: {
         Row: { id: number; categoria: string; producto_id: number | null; clave: string; etiqueta: string; valores: string[] };
         Insert: { id?: number; categoria: string; producto_id?: number | null; clave: string; etiqueta: string; valores: string[] };
@@ -135,18 +147,21 @@ export type Database = {
       }
       producto: {
         Row: {
+          categoria_id?: number
           categoria: string
           id: number
           marca: string
           nombre: string
         }
         Insert: {
+          categoria_id?: number
           categoria: string
           id?: number
           marca: string
           nombre: string
         }
         Update: {
+          categoria_id?: number
           categoria?: string
           id?: number
           marca?: string
@@ -366,6 +381,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      pgl_create_product: { Args: { p_category: number; p_name: string; p_brand: string }; Returns: number }
+      pgl_add_category_value: { Args: { p_characteristic: number; p_value: string }; Returns: string }
       pgl_add_sale_payment: { Args: { p_id: number; p_amount: number; p_request: string; p_delivered: boolean }; Returns: number }
       pgl_create_sale_partial: { Args: { p_unit: number; p_client: number; p_seller: number; p_date: string; p_price: number; p_commission: number; p_amount: number; p_request: string; p_delivered: boolean }; Returns: number }
       pgl_close_day: { Args: { p_date: string }; Returns: number }

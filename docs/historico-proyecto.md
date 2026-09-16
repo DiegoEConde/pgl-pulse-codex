@@ -119,3 +119,16 @@ Ajuste solicitado implementado localmente; [detalle y activación](sprints/COMPR
 Acceso administrativo por CLI confirmado el 2026-09-14 al proyecto hxoofxapwgebihkyuvrv. B2 ya existía en remoto y se verificó sin reejecutarlo. Aplicada purchase_options y registradas ambas versiones en el historial. Integración SQL y prueba de opciones con rol anon aprobadas en Supabase, con ROLLBACK. Datos previos verificados por hashes. App en localhost:3100 comprobada contra el snapshot real: colores y RAM/ROM visibles, botón Cargar en Reparto habilitado; navegador sin escrituras. Las pruebas transaccionales pueden avanzar secuencias. No se validó concurrencia entre conexiones.
 
 Las cuatro migraciones históricas tienen versiones remotas distintas de los nombres locales. Se preservó ese historial; no usar db push indiscriminadamente ni volver a ejecutar el esquema inicial. Las dos versiones beta sí coinciden y quedaron registradas.
+
+## Categorias y caracteristicas — 2026-09-15
+
+Implementada la definicion del usuario: 15 categorias, 22 caracteristicas
+obligatorias y FK en productos. Compras permite crear productos y agregar valores
+a listas existentes, sin crear campos; conserva el borrador. Potencia entera de
+2 a 350 W y televisores hasta la opcion indicada de 100 pulgadas.
+
+Aplicadas las migraciones de categorias y permisos explicitos en Supabase.
+Configuracion anterior archivada; hashes de datos operativos anteriores sin
+cambios. Pruebas locales SQL, logica y navegador aprobadas, incluida la regresion
+de Repartos. Formulario verificado con snapshot real sin escrituras de navegador.
+Ver [detalle](sprints/CATEGORIAS.md). Sin commit, push, publicacion ni inicio de B3.

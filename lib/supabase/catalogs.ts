@@ -10,6 +10,7 @@ export async function persistRecord(catalog: CatalogId, record: MasterRecord, is
   const query = (() => {
     switch (catalog) {
       case "products": {
+        values.marca ??= "";
         const payload = values as Database["public"]["Tables"]["producto"]["Insert"];
         return isNew ? client.from("producto").insert(payload) : client.from("producto").update(payload).eq("id", record.id);
       }

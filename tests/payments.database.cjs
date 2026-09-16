@@ -7,6 +7,7 @@ const { PGlite } = require(process.env.PGL_PGLITE_PATH || process.env.TEMP + "/p
  const db = new PGlite();
  try {
   await db.exec("CREATE ROLE anon; CREATE ROLE authenticated; CREATE SCHEMA auth; CREATE FUNCTION auth.jwt() RETURNS jsonb LANGUAGE sql AS $$ SELECT '{}'::jsonb $$;");
+  await db.exec("ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon,authenticated; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO anon,authenticated;");
   const files=fs.readdirSync("supabase/migrations").filter(f=>f.endsWith(".sql")).sort();
   for(const file of files.filter(f=>f < "20260913000100_sale_installments.sql")) await db.exec(fs.readFileSync("supabase/migrations/"+file,"utf8"));
   await db.exec("SET ROLE anon");
@@ -57,9 +58,9 @@ const { PGlite } = require(process.env.PGL_PGLITE_PATH || process.env.TEMP + "/p
   await assert.rejects(db.exec("DELETE FROM venta_abono"),/permission denied/);
   await assert.rejects(db.query("SELECT pgl_create_sale_alpha(8,1,1,$1::date,100,5,false,$2::uuid)",[day,randomUUID()]),/permission denied/);
   // Compras: opciones persistentes, variantes del mismo modelo y atomicidad.
-  assert.ok((await snapshot()).purchaseOptions.some(o=>o.clave==='rom'));
+  assert.ok((await snapshot()).categoryCharacteristics.some(o=>o.clave==='rom'));
   const consoleId=(await db.query("INSERT INTO producto(marca,nombre,categoria) VALUES('Test','Consola','Consolas') RETURNING id")).rows[0].id;
-  const purchaseLines=['Digital','Pro'].map(edicion=>({producto_id:consoleId,color:'Negro',cantidad:1,precio_costo_usd:100,atributos:{edicion}}));
+  const purchaseLines=['Digital','Pro'].map(edicion=>({producto_id:consoleId,color:'',cantidad:1,precio_costo_usd:100,atributos:{edicion,rom:'1 TB'}}));
   const request=randomUUID();
   const purchase=async(lines= purchaseLines,token=request)=>(await db.query("SELECT pgl_create_order(1,$1::date,NULL,0,'Notas',$2::jsonb,$3::uuid) AS id",[day,JSON.stringify(lines),token])).rows[0].id;
   const purchaseId=await purchase();assert.equal(await purchase(),purchaseId);
@@ -76,6 +77,7 @@ const { PGlite } = require(process.env.PGL_PGLITE_PATH || process.env.TEMP + "/p
   // El resto del circuito continúa validándose con las RPC nuevas.
   await db.exec("RESET ROLE");
   await db.exec(fs.readFileSync("supabase/tests/integration.sql","utf8"));
+  await db.exec(fs.readFileSync("supabase/tests/categories.sql","utf8"));
   console.log("B2 PostgreSQL: migración, saldos alpha, 40+40+20, reintentos, límites, retiro, atomicidad, permisos e integración OK");
  } finally { await db.close(); }
 })().catch(error=>{console.error(error);process.exitCode=1;});

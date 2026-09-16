@@ -1,5 +1,5 @@
 import type { Snapshot, PurchaseOrder, PurchaseStatus, Sale, StockUnit } from "@/types/operations";
-import { decodePurchaseDetails } from "./purchase-details";
+import { decodePurchaseDetails, variantLabel } from "./purchase-details";
 import { operationalDate } from "./dates";
 
 // Une los IDs del snapshot con los catálogos, sin modificar los datos recibidos.
@@ -11,7 +11,7 @@ export function deriveOperations(data: Snapshot) {
   const ordersById = new Map(data.orders.map(row => [row.id, row]));
   const orders: PurchaseOrder[] = data.orders.map(order => {
     const details = decodePurchaseDetails(order.observaciones);
-    const lines = data.lines.filter(line => line.pedido_id === order.id).map(line => ({ ...line, variant: Object.entries(line.atributos ?? {}).filter(([key]) => !["ram", "rom"].includes(key)).map(([, value]) => value).join(" · "), ram: line.atributos?.ram ?? details.lines.find(spec => spec.producto_id === line.producto_id && spec.color === line.color)?.ram ?? "", rom: line.atributos?.rom ?? details.lines.find(spec => spec.producto_id === line.producto_id && spec.color === line.color)?.rom ?? "", product: products.get(line.producto_id)?.nombre ?? "Producto no disponible" }));
+    const lines = data.lines.filter(line => line.pedido_id === order.id).map(line => ({ ...line, variant: variantLabel(line.atributos), ram: line.atributos?.ram ?? details.lines.find(spec => spec.producto_id === line.producto_id && spec.color === line.color)?.ram ?? "", rom: line.atributos?.rom ?? details.lines.find(spec => spec.producto_id === line.producto_id && spec.color === line.color)?.rom ?? "", product: products.get(line.producto_id)?.nombre ?? "Producto no disponible" }));
     return { id: order.id, supplier: suppliers.get(order.proveedor_id)?.nombre ?? "—",
       date: order.fecha_pedido ? operationalDate(order.fecha_pedido) : "", expectedDate: order.fecha_estimada ?? "",
       units: lines.reduce((total, line) => total + line.cantidad, 0),

@@ -30,3 +30,9 @@
 
 .receiptLine { padding: 16px; border: 1px solid var(--line); border-radius: 12px; display: grid; gap: 14px; }
 .receiptLine h3, .receiptLine h4 { margin: 0; }
+.inlineControl { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.inlineControl select, .inlineControl input { min-width: 0; flex: 1; }
+.iconButton { display: grid; place-items: center; flex: 0 0 36px; width: 36px; height: 36px; background: transparent; color: var(--text); border: 1px solid var(--line); border-radius: 6px; }
+.iconButton:hover { background: rgba(51,156,255,.1); }
+.catalogOverlay { z-index: 70; }
+.field { min-width: 0; }

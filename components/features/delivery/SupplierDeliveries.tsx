@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Clock3, MapPin, Phone, Truck } from "lucide-react";
 
 import type { buildDeliveryGroups } from "@/lib/delivery";
+import { memoryLabel } from "@/lib/purchase-details";
 import { formatUsd } from "@/lib/formatters";
 import styles from "./DeliveryScreen.module.css";
 
@@ -21,7 +22,7 @@ function SupplierCard({ group }: { group: Group }) {
     <div className={styles.items}>
       {group.lines.slice(current * 2, current * 2 + 2).map(line => <div className={styles.item} key={line.id}>
         <div><strong>{line.product}</strong><small>Pedido #{line.orderId} · {line.status === "BORRADOR" ? "Borrador" : line.status === "PEDIDO" ? "Pedido" : "En envío"}</small></div>
-        <div><span className={styles.label}>{line.variant ? "Variante" : "RAM / ROM"}</span><span>{line.variant || <>{line.ram || "—"} / {line.rom || "—"}{line.ram || line.rom ? " GB" : ""}</>}</span></div>
+        <div><span className={styles.label}>{line.variant ? "Variante" : "RAM / ROM"}</span><span>{[memoryLabel(line.ram, line.rom), line.variant].filter(Boolean).join(" · ") || "—"}</span></div>
         <div><span className={styles.label}>Color</span><span>{line.color}</span></div>
         <div className={styles.price}><strong>{formatUsd(line.cost)}</strong><small>Costo unitario · ×{line.quantity}</small></div>
       </div>)}

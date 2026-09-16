@@ -8,6 +8,8 @@ const snapshot={products:[{id:1,marca:"Apple",nombre:"iPhone 15",categoria:"Celu
 {id:2,nombre:"Roman",direccion:"Calle de Prueba 1400",telefono:"011 0000-1400",horario_desde:"14:00:00",horario_hasta:"16:00:00"},
 {id:3,nombre:"Anselmo",direccion:"Calle de Prueba 1000",telefono:"011 0000-1000",horario_desde:"10:00:00",horario_hasta:"20:00:00"}],purchaseOptions:[{categoria:"*",producto_id:null,clave:"color",etiqueta:"Color",valores:["Negro","Blanco"]},{categoria:"celulares",producto_id:null,clave:"ram",etiqueta:"RAM (GB)",valores:["12"]},{categoria:"celulares",producto_id:null,clave:"rom",etiqueta:"Almacenamiento / ROM (GB)",valores:["128"]}],orders:[],lines:[],clients:[],sellers:[],units:[],charts:[]};
 (async()=>{
+snapshot.categories=[{id:1,nombre:'celulares'},{id:2,nombre:'consolas'},{id:3,nombre:'notebooks'}];
+snapshot.categoryCharacteristics=snapshot.purchaseOptions.map((field,index)=>({...field,id:index+1,categoria_id:1,tipo:'lista',obligatoria:true,minimo:null,maximo:null}));
 const browser=await chromium.launch({executablePath:"C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",headless:true});
 try {
  const page=await browser.newPage({viewport:{width:1440,height:1100},reducedMotion:"reduce"});const errors=[];page.on("pageerror",e=>errors.push(e.message));
@@ -73,7 +75,8 @@ try {
  assert.ok(copied.includes("12/128 GB - $ 450.25"));
  await page.screenshot({path:"tests/artifacts/delivery-desktop.png",fullPage:true});
  snapshot.products.push({id:2,marca:"Sony",nombre:"Consola",categoria:"Consolas"},{id:3,marca:"Test",nombre:"Notebook",categoria:"Notebooks"});
- snapshot.purchaseOptions.push({categoria:"consolas",producto_id:null,clave:"edicion",etiqueta:"Variante",valores:["Física","Digital","Pro","Edición especial"]});
+ snapshot.categoryCharacteristics.push({id:4,categoria_id:2,clave:"edicion",etiqueta:"Modelo",valores:["Física","Digital","Pro","Ed. especial"],tipo:'lista',obligatoria:true,minimo:null,maximo:null});
+ snapshot.categoryCharacteristics.push({...snapshot.categoryCharacteristics[0],id:5,categoria_id:2});
  await page.getByRole("button",{name:"Actualizar datos"}).click();await nav("Compras");
  await page.getByRole("button",{name:"Nueva compra",exact:true}).click();
  assert.equal(await page.locator('#expected, #shipping').count(),0);
@@ -99,7 +102,7 @@ try {
  await page.getByText('Digital',{exact:true}).waitFor();await page.getByText('Pro',{exact:true}).waitFor();
  await page.getByRole('button',{name:'Cerrar detalle',exact:true}).click();
  await page.setViewportSize({width:1440,height:1100});
- delete snapshot.purchaseOptions;await page.getByRole('button',{name:'Actualizar datos',exact:true}).click();
+ delete snapshot.categoryCharacteristics;await page.getByRole('button',{name:'Actualizar datos',exact:true}).click();
  await page.getByRole('button',{name:'Nueva compra',exact:true}).click();
  assert.equal(await page.getByRole('button',{name:'Cargar en Reparto',exact:true}).isDisabled(),true);
  assert.deepEqual(errors,[]);console.log("PASS: create purchases, grouping, time order, RAM/ROM, reload, pagination and 6 viewports.");

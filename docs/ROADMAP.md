@@ -81,3 +81,11 @@ Al cerrar cada sprint se actualizan reglas, documentación afectada e histórico
 ## Ajuste de Compras — 2026-09-14
 
 [Formulario y opciones por categoría](sprints/COMPRAS-OPCIONES.md) implementados localmente. Aplicado y verificado en Supabase el 2026-09-14, con B2 previamente existente. No se inició B3. Cálculo de envío y opciones definitivas pendientes de la explicación del usuario.
+
+## Categorias y caracteristicas — 2026-09-15
+
+El usuario definio las opciones definitivas: [implementacion](sprints/CATEGORIAS.md).
+15 categorias relacionadas con productos y 22 caracteristicas; altas de productos
+y valores desde Compras. Aplicadas las migraciones de categorias y permisos en
+Supabase, conservando los datos anteriores. Calculo de envio aun pendiente; B3
+no iniciado. Esta entrega queda para revision del usuario.

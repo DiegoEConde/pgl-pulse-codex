@@ -1,5 +1,5 @@
 import type { Snapshot } from "@/types/operations";
-import { decodePurchaseDetails } from "./purchase-details";
+import { decodePurchaseDetails, memoryLabel, variantLabel } from "./purchase-details";
 
 export function buildDeliveryGroups(raw: Snapshot) {
   const products = new Map(raw.products.map(product => [product.id, product]));
@@ -17,8 +17,8 @@ export function buildDeliveryGroups(raw: Snapshot) {
     const lines = raw.lines.filter(line => line.pedido_id === order.id).map(line => {
       const product = products.get(line.producto_id);
       const spec = specs.find(item => item.producto_id === line.producto_id && item.color === line.color);
-      return { id: line.id, orderId: order.id, product: product ? product.marca + " · " + product.nombre : "Producto no disponible",
-        ram: line.atributos?.ram ?? spec?.ram ?? "", rom: line.atributos?.rom ?? spec?.rom ?? "", variant: Object.entries(line.atributos ?? {}).filter(([key]) => !["ram", "rom"].includes(key)).map(([, value]) => value).join(" · "), color: line.color, quantity: line.cantidad, cost: line.precio_costo_usd, status: order.estado };
+      return { id: line.id, orderId: order.id, product: product ? [product.marca, product.nombre].filter(Boolean).join(" · ") : "Producto no disponible",
+        ram: line.atributos?.ram ?? spec?.ram ?? "", rom: line.atributos?.rom ?? spec?.rom ?? "", variant: variantLabel(line.atributos), color: line.color, quantity: line.cantidad, cost: line.precio_costo_usd, status: order.estado };
     });
     if (!lines.length) continue;
     let group = groups.get(order.proveedor_id);
@@ -43,7 +43,7 @@ export function formatDeliveryMessage(groups: ReturnType<typeof buildDeliveryGro
     const hours = group.from && group.until ? `de ${time(group.from)} a ${time(group.until)}` : group.from ? `desde ${time(group.from)}` : group.until ? `hasta ${time(group.until)}` : "Horario sin definir";
     const lines = group.lines.map(line => {
       const name = clean(line.product.replace(/ · /g, " ")).toUpperCase();
-      const memory = line.ram || line.rom ? ` ${clean(line.ram) || "—"}/${clean(line.rom) || "—"} GB` : "";
+      const memory = line.ram || line.rom ? ` ${memoryLabel(clean(line.ram), clean(line.rom), true)}` : "";
       return `(${line.quantity}) ${name}${memory}${line.variant ? " " + clean(line.variant) : ""} - $ ${money(Math.round(line.cost * 100))}\n${clean(line.color).toUpperCase()}`;
     });
     const total = group.lines.reduce((sum, line) => sum + Math.round(line.cost * 100) * line.quantity, 0);

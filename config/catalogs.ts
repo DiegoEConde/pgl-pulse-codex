@@ -12,7 +12,7 @@ export const catalogConfig: Record<CatalogId, CatalogConfig> = {
       {
         "key": "marca",
         "label": "Marca",
-        "required": true,
+        "required": false,
         "maxLength": 80
       },
       {

@@ -74,3 +74,17 @@ payments.database.cjs aplica también las migraciones posteriores a B2: variante
 
 
 Validación remota realizada el 2026-09-14 con la CLI autenticada: supabase/tests/integration.sql y supabase/tests/purchase_options.sql. Ambas usan transacción y ROLLBACK; las secuencias pueden avanzar. Verificado también el formulario en localhost:3100 contra el snapshot real, sin enviar escrituras desde el navegador.
+
+## Categorias (2026-09-15)
+
+`npm run test:payments` incluye `supabase/tests/categories.sql` y reproduce los
+permisos predeterminados de Supabase. `npm run test:categories` prueba las 15
+categorias, altas de productos/valores, borrador, recarga y escritorio/movil usando
+PostgreSQL en memoria. Necesita PGlite, Playwright, Edge y servidor local en 3100
+(o `PGL_TEST_URL`). No escribe en Supabase.
+
+`node tests/categories.remote.browser.cjs` comprueba el snapshot real y los
+selectores; bloquea todas las solicitudes REST salvo `pgl_snapshot`.
+`supabase/tests/categories.sql` reemplaza la prueba de opciones de la migracion
+anterior. `purchase_options.sql` solo corresponde al esquema del 14 de septiembre.
+Las pruebas SQL remotas terminan en ROLLBACK, pero pueden avanzar secuencias.

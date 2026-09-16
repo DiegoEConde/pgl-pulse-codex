@@ -32,3 +32,15 @@ El antiguo circuito de navegador se aprobó contra la interfaz de ese día. Se r
 La limpieza de datos de aquella prueba ocurrió antes de cargar los catálogos simulados de las sesiones posteriores. La última nota registra proveedores Jacinto, Roman y Anselmo con contactos ficticios, y cuatro productos de prueba. No asumir que la base está vacía ni que ese listado describe su contenido actual.
 
 Para pruebas locales y su alcance vigente, consultar [tests/README.md](../tests/README.md). Las decisiones pendientes están en [ROADMAP.md](ROADMAP.md).
+
+## Categorias — 2026-09-15
+
+Aplicadas y registradas `20260915000100` y `20260915000200`: tablas `categorias`
+y `categoria_caracteristica`, FK `producto.categoria_id`, altas mediante RPC y
+permisos explicitos. `compra_opcion` se conserva como archivo y ya no alimenta el
+snapshot. No se modificaron las versiones historicas.
+
+Verificacion remota: prueba SQL de categorias con rol anon y ROLLBACK, formulario
+con snapshot real sin escrituras de navegador y hashes anteriores/posteriores de
+productos, pedidos, lineas, unidades, abonos y opciones antiguas sin cambios.
+Las pruebas pueden avanzar las secuencias. [Detalle](sprints/CATEGORIAS.md).

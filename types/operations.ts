@@ -21,7 +21,8 @@ export type StockUnit = {
 // Contrato de pgl_snapshot; charts se conserva por compatibilidad con la base existente.
 export type SalePayment = { id: number; unidad_id: number; importe_usd: number; registrado_en: string; solicitud_id: string };
 export type Snapshot = {
-  purchaseOptions?: import("@/lib/purchase-options").PurchaseOption[];
+  categories?: import("@/lib/categories").Category[];
+  categoryCharacteristics?: import("@/lib/categories").CategoryCharacteristic[];
   salePayments?: SalePayment[];
   products: Tables<"producto">[]; suppliers: Tables<"proveedor">[]; clients: Tables<"cliente">[];
   sellers: Tables<"vendedor">[]; orders: Tables<"pedido">[]; lines: (Tables<"detalle_pedido"> & { atributos?: Record<string, string> })[];

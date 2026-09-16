@@ -18,7 +18,7 @@ Este documento describe el comportamiento implementado en alpha y los cambios de
 - El envío se reparte entre unidades en centavos; el remanente se distribuye sin perder el total.
 - IMEI/serie, RAM, variante y precio sugerido son opcionales. Stock permite completarlos mientras la unidad esté disponible.
 - Ajuste local de Compras: sin recepción estimada ni envío en el modal. Cargar en Reparto guarda el pedido pendiente y vuelve al listado.
-- Colores y variantes configurables por categoría y producto, persistentes en detalle_pedido.atributos; lectura compatible de las observaciones antiguas. Activación remota verificada el 2026-09-14: [detalle](sprints/COMPRAS-OPCIONES.md).
+- Categorías relacionadas por ID y características obligatorias en `categoria_caracteristica`; 15 categorías y 22 campos definidos por el usuario. Compras permite crear productos y agregar valores a listas existentes, sin crear campos. Las categorías sin color no lo solicitan; audio admite potencia entera de 2 a 350 W. RAM y almacenamiento usan GB/TB. Configuración anterior archivada y pedidos históricos conservados: [detalle](sprints/CATEGORIAS.md).
 - La creación usa un UUID de solicitud para que reintentar no duplique un pedido.
 - Pedidos de hoy contiene los abiertos de la fecha actual; el historial contiene los anteriores y los cerrados. Búsqueda y estado filtran ambos conjuntos antes de paginar.
 - La RPC histórica de cierre permanece en el esquema por compatibilidad; no se incorporará su control a la interfaz. Desde B1, esa marca no oculta pedidos pendientes en Repartos.

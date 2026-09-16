@@ -8,11 +8,11 @@ DECLARE
   day date := (now() at time zone 'America/Argentina/Buenos_Aires')::date;
   lines jsonb; units jsonb; failed boolean; delivery_time timestamptz; chart_id uuid;
 BEGIN
-  INSERT INTO public.producto(marca,nombre,categoria) VALUES ('PGL_TEST',request_id::text,'Test') RETURNING id INTO product_id;
+  INSERT INTO public.producto(marca,nombre,categoria) VALUES ('PGL_TEST',request_id::text,'joysticks') RETURNING id INTO product_id;
   INSERT INTO public.proveedor(nombre) VALUES ('PGL_TEST') RETURNING id INTO supplier_id;
   INSERT INTO public.cliente(nombre) VALUES ('PGL_TEST') RETURNING id INTO client_id;
   INSERT INTO public.vendedor(nombre,porcentaje_comision) VALUES ('PGL_TEST',5) RETURNING id INTO seller_id;
-  lines := jsonb_build_array(jsonb_build_object('producto_id',product_id,'color','Negro','cantidad',3,'precio_costo_usd',10));
+  lines := jsonb_build_array(jsonb_build_object('producto_id',product_id,'color','Negro','cantidad',3,'precio_costo_usd',10,'atributos','{}'::jsonb));
   order_id := public.pgl_create_order(supplier_id,day,day,0.05,'Prueba transaccional',lines,request_id);
   IF public.pgl_create_order(supplier_id,day,day,0.05,'Prueba transaccional',lines,request_id) <> order_id THEN RAISE EXCEPTION 'Compra duplicada'; END IF;
   SELECT id INTO detail_id FROM public.detalle_pedido WHERE pedido_id=order_id;

@@ -1,6 +1,16 @@
 // Guarda RAM/ROM junto con las notas hasta que detalle_pedido tenga columnas propias.
 export type MemorySpec = { producto_id: number; color: string; ram: string; rom: string };
 const marker = "pgl.purchase-details.v1";
+export function memoryLabel(ram: string, rom: string, compact = false) {
+  const separator = compact ? "/" : " / ";
+  if (!ram && !rom) return "";
+  if ((!ram || /^\d+$/.test(ram)) && (!rom || /^\d+$/.test(rom))) return (ram || "—") + separator + (rom || "—") + " GB";
+  const unit = (value: string) => /^\d+$/.test(value) ? value + " GB" : value;
+  return [ram && unit(ram), rom && unit(rom)].filter(Boolean).join(separator);
+}
+export function variantLabel(attributes: Record<string, string> = {}) {
+  return Object.entries(attributes).filter(([key]) => !["ram", "rom"].includes(key)).map(([key, value]) => key === "potencia" ? value + " W" : key === "pulgadas" ? value + '"' : value).join(" · ");
+}
 export function encodePurchaseDetails(notes: string, lines: MemorySpec[]) {
   if (!lines.some(line => line.ram || line.rom)) return notes;
   return JSON.stringify({ format: marker, notes, lines });
