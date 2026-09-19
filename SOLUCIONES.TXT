@@ -1,0 +1,6 @@
+en pedidos y en general:
+- Cambia US$ por USD
+- la direccion y telefono, en vez de ponerlo debajo del nombre del proveedor, ponelo a la derecha (usando la misma fuente y colores)
+- que la parte de pedidos sin confirmar, que diga, pedidos sin recepcionar (queda mas profesional)
+- quita el comentario debajo del boton de generar pedidos
+- al abrir los pedidos sin confirmar, que al lado de cada nombre de proveedor, se vea la fecha en la que se hizo el pedido. lo mismo en el modal de validacion, que se vea al lado del numero de pedido, separado por un -

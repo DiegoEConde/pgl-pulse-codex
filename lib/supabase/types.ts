@@ -381,6 +381,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      pgl_generate_orders: { Args: { p_ids: Json }; Returns: number }
+      pgl_receive_and_pay_order: { Args: { p_id: number; p_units: Json; p_amount: number }; Returns: undefined }
       pgl_create_product: { Args: { p_category: number; p_name: string; p_brand: string }; Returns: number }
       pgl_add_category_value: { Args: { p_characteristic: number; p_value: string }; Returns: string }
       pgl_add_sale_payment: { Args: { p_id: number; p_amount: number; p_request: string; p_delivered: boolean }; Returns: number }

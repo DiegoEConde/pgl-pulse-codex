@@ -27,4 +27,5 @@ export type Snapshot = {
   products: Tables<"producto">[]; suppliers: Tables<"proveedor">[]; clients: Tables<"cliente">[];
   sellers: Tables<"vendedor">[]; orders: Tables<"pedido">[]; lines: (Tables<"detalle_pedido"> & { atributos?: Record<string, string> })[];
   units: (Tables<"unidad"> & { cobrado_inicial_usd?: number })[]; charts: Tables<"reporte_config">[];
+  supplierPayments?: { id: number; pedido_id: number; proveedor_id: number; importe_usd: number; registrado_en: string }[];
 };

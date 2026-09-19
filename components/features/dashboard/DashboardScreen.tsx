@@ -8,13 +8,8 @@ import MetricCard from "@/components/ui/MetricCard/MetricCard";
 import { useApp } from "@/contexts/AppContext";
 import { formatUsd } from "@/lib/formatters";
 import { useProgram } from "@/contexts/ProgramContext";
+import { buildPendingOrders } from "@/lib/delivery";
 import styles from "./DashboardScreen.module.css";
-
-const alerts = [
-  { icon: ScanBarcode, title: "Unidades sin IMEI", description: "Con un cliente asociado", color: "var(--red)" },
-  { icon: PackageSearch, title: "Stock incompleto", description: "Unidades con datos pendientes", color: "var(--amber)" },
-  { icon: ClipboardList, title: "Pedidos sin confirmar", description: "Compras pendientes de confirmación", color: "var(--violet)" },
-];
 
 function currentGreeting() {
   const hour = Number(new Intl.DateTimeFormat("es-AR", {
@@ -39,13 +34,27 @@ export default function DashboardScreen() {
     };
   }, []);
   const { navigate } = useApp();
-  const { sales, orders, today } = useProgram();
+  const { sales, orders, today, raw } = useProgram();
   const dailySales = sales.filter(sale => sale.date === today);
   const dailyOrders = orders.filter(order => order.date === today);
   const drafts = dailyOrders.filter(order => order.status === "BORRADOR").length;
   const confirmed = dailyOrders.length - drafts;
   const closed = dailyOrders.filter(order => order.closed).length;
   const total = dailyOrders.reduce((sum, order) => sum + order.merchandiseUsd + order.shippingUsd, 0);
+  const pendingOrders = buildPendingOrders(raw);
+  const debts = raw.suppliers.map(supplier => {
+    const supplierOrders = raw.orders.filter(order => order.proveedor_id === supplier.id && order.estado === "RECIBIDO");
+    const billed = supplierOrders.reduce((sum, order) => sum + raw.lines.filter(line => line.pedido_id === order.id).reduce((lineSum, line) => lineSum + line.cantidad * line.precio_costo_usd, 0) + order.costo_envio_usd, 0);
+    const paid = (raw.supplierPayments ?? []).filter(payment => payment.proveedor_id === supplier.id).reduce((sum, payment) => sum + payment.importe_usd, 0);
+    return { name: supplier.nombre, total: Math.max(0, billed - paid) };
+  }).filter(item => item.total > 0);
+  const debtTotal = debts.reduce((sum, item) => sum + item.total, 0);
+  const alerts = [
+    { icon: ScanBarcode, title: "Unidades sin IMEI", description: "Stock con identificación pendiente", color: "var(--red)", count: raw.units.filter(unit => !unit.codigo).length },
+    { icon: PackageSearch, title: "Stock incompleto", description: "Unidades con datos pendientes", color: "var(--amber)", count: raw.units.filter(unit => !unit.codigo || !unit.precio_sugerido_usd).length },
+    { icon: ClipboardList, title: "Pedidos sin recepcionar", description: "Validá la recepción por proveedor", color: "var(--violet)", count: pendingOrders.length },
+    { icon: Wallet, title: "Deudas con proveedores", description: "Pedidos recibidos con saldo", color: "var(--amber)", count: debts.length },
+  ];
 
   return <div className={`view ${styles.page}`}>
     <PageHeader title={greeting} />
@@ -71,16 +80,15 @@ export default function DashboardScreen() {
 
       <article className={styles.card + " " + styles.debt}>
         <header className={styles.cardHead}><div><span className={styles.kicker}>Cuenta de proveedores</span><h2>Deuda pendiente</h2></div><Wallet size={20} className={styles.debtIcon} /></header>
-        <div className={styles.debtTotal}><strong aria-label="Saldo no disponible">—</strong><span>Total por pagar</span><span className={styles.previewBadge}>Pendiente de calcular</span></div>
-        <div className={styles.debtTable}><table><thead><tr><th>Proveedor</th><th>Hoy</th><th>Histórico</th><th>Total</th></tr></thead><tbody><tr><td colSpan={4}>Los saldos aparecerán al registrar los pagos a proveedores.</td></tr></tbody></table></div>
+        <div className={styles.debtTotal}><strong>{formatUsd(debtTotal)}</strong><span>Total por pagar</span></div>
+        <div className={styles.debtTable}><table><thead><tr><th>Proveedor</th><th>Total</th></tr></thead><tbody>{debts.length ? debts.map(item => <tr key={item.name}><td>{item.name}</td><td>{formatUsd(item.total)}</td></tr>) : <tr><td colSpan={2}>No hay saldos pendientes.</td></tr>}</tbody></table></div>
       </article>
 
       <aside className={styles.card + " " + styles.alerts} aria-labelledby="alerts-title">
         <header className={styles.alertHeader}><span className={styles.bell}><BellRing size={21} /></span><div><span className={styles.kicker}>Seguimiento</span><h2 id="alerts-title">Centro de alertas</h2></div></header>
-        <span className={styles.previewBadge}>Vista previa</span>
         <p className={styles.alertIntro}>Los pendientes de tu operación, en un solo lugar.</p>
-        <div className={styles.alertList}>{alerts.map(({ icon: Icon, title, description, color }) => <div className={styles.alertItem} key={title} style={{ "--alert-color": color } as React.CSSProperties}><div className={styles.alertItemHead}><Icon size={19} /><strong aria-label="Cantidad pendiente de conectar">—</strong></div><h3>{title}</h3><p>{description}</p></div>)}</div>
-        <footer className={styles.alertFooter}><span className={styles.statusDot} />Contadores pendientes de conectar</footer>
+        <div className={styles.alertList}>{alerts.map(({ icon: Icon, title, description, color, count }) => <div className={styles.alertItem} key={title} style={{ "--alert-color": color } as React.CSSProperties}><div className={styles.alertItemHead}><Icon size={19} /><strong>{count}</strong></div><h3>{title}</h3><p>{description}</p></div>)}</div>
+        <footer className={styles.alertFooter}><span className={styles.statusDot} />Datos actualizados desde la operación</footer>
       </aside>
     </div>
   </div>;

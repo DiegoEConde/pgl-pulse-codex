@@ -35,11 +35,11 @@ test("Agrupa por ID aun con nombres iguales y desempata por nombre e ID",()=>{
  const raw=fixture();raw.suppliers[1].nombre="Jacinto";raw.suppliers[1].horario_desde="15:00:00";add(raw,1,2);add(raw,2,1);
  assert.deepEqual(groups(raw).map(x=>x.supplierId),[1,2]);
 });
-test("Solo recibidos desaparecen; pendientes de otros dias permanecen aun con cierre historico",()=>{
+test("Solo los borradores aparecen antes de generar; pedidos generados esperan recepcion",()=>{
  const raw=fixture();add(raw,1,1,{estado:"RECIBIDO"});add(raw,2,2,{cerrado_en:"2026-09-11"});add(raw,3,3,{estado:"ENVÍO",fecha_estimada:"2026-09-09"});
- assert.deepEqual(groups(raw).map(x=>x.name),["Anselmo","Roman"]);
+ assert.deepEqual(groups(raw).map(x=>x.name),["Roman"]);
  raw.orders[1].estado="RECIBIDO";
- assert.deepEqual(groups(raw).map(x=>x.name),["Anselmo"]);
+ assert.deepEqual(groups(raw).map(x=>x.name),[]);
 });
 test("RAM/ROM, notas, cantidades y costo sobreviven al snapshot y a la derivacion",()=>{
  const raw=fixture();const notes=details.encodePurchaseDetails("Llamar antes",[{producto_id:1,color:"Negro",ram:"12",rom:"128"}]);

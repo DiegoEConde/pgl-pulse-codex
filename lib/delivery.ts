@@ -11,7 +11,7 @@ export function buildDeliveryGroups(raw: Snapshot) {
   }>();
   // Un cierre histórico no acredita recepción: el pedido sigue pendiente hasta RECIBIDO.
   for (const order of raw.orders) {
-    if (order.estado === "RECIBIDO") continue;
+    if (order.estado !== "BORRADOR") continue;
     const supplier = suppliers.get(order.proveedor_id);
     const specs = decodePurchaseDetails(order.observaciones).lines;
     const lines = raw.lines.filter(line => line.pedido_id === order.id).map(line => {
@@ -32,6 +32,23 @@ export function buildDeliveryGroups(raw: Snapshot) {
   }
   return [...groups.values()].map(group => ({ ...group, lines: group.lines.sort((a,b) => a.orderId - b.orderId || a.id - b.id) }))
     .sort((a,b) => (a.from || "99:99").localeCompare(b.from || "99:99") || a.name.localeCompare(b.name, "es") || a.supplierId - b.supplierId);
+}
+
+export function buildPendingOrders(raw: Snapshot) {
+  const products = new Map(raw.products.map(product => [product.id, product]));
+  const suppliers = new Map(raw.suppliers.map(supplier => [supplier.id, supplier]));
+  const payments = raw.supplierPayments ?? [];
+  return raw.orders.filter(order => order.estado === "PEDIDO" || order.estado === "ENVÍO").map(order => {
+    const specs = decodePurchaseDetails(order.observaciones).lines;
+    const lines = raw.lines.filter(line => line.pedido_id === order.id).map(line => {
+      const product = products.get(line.producto_id);
+      const spec = specs.find(item => item.producto_id === line.producto_id && item.color === line.color);
+      return { ...line, product: product ? [product.marca, product.nombre].filter(Boolean).join(" · ") : "Producto no disponible", ram: line.atributos?.ram ?? spec?.ram ?? "", rom: line.atributos?.rom ?? spec?.rom ?? "", variant: variantLabel(line.atributos) };
+    });
+    const total = lines.reduce((sum, line) => sum + line.cantidad * line.precio_costo_usd, 0) + order.costo_envio_usd;
+    const paid = payments.filter(payment => payment.pedido_id === order.id).reduce((sum, payment) => sum + payment.importe_usd, 0);
+    return { id: order.id, date: order.fecha_pedido ?? "", supplierId: order.proveedor_id, supplier: suppliers.get(order.proveedor_id)?.nombre ?? "Proveedor no disponible", lines, total, paid, debt: Math.max(0, total - paid) };
+  }).sort((a, b) => a.id - b.id);
 }
 
 // Exporta el conjunto completo, aunque la tarjeta muestre solo una página de productos.
