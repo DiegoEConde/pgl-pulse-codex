@@ -25,7 +25,7 @@ function Charts({report,pie,ranking,top,onPie,onRanking}:{report:Report;pie:PieM
  const slices=reportSlices(report,pie,top);
  const expensive=expensiveProducts(report),sellers=productiveSellers(report);
  return <div className={styles.charts}>
-  <section className={`panel ${styles.chartPanel}`}><header className={styles.panelHead}><h2>{top?"Top 10":"Distribución"} · {pieLabels[pie]}</h2><select className="filter" aria-label="Distribución por" value={pie} onChange={e=>onPie(e.target.value as PieMode)}><option value="products">Unidades</option><option value="clients">Clientes</option><option value="suppliers">Proveedores</option></select></header><ReportPie data={slices}/></section>
+  <section className={`panel ${styles.chartPanel}`}><header className={styles.panelHead}><h2>{top?"Top 10":"Distribución"} · {pieLabels[pie]}</h2><select className="filter" aria-label="Distribución por" value={pie} onChange={e=>onPie(e.target.value as PieMode)}><option value="purchasedUnits">Unidades compradas</option><option value="soldUnits">Unidades vendidas</option><option value="suppliers">Proveedores a los que más compramos</option><option value="clients">Clientes que más compraron</option></select></header><ReportPie data={slices}/></section>
   <section className={`panel ${styles.chartPanel}`}><header className={styles.panelHead}><h2>Top 5</h2><select className="filter" aria-label="Ranking de" value={ranking} onChange={e=>onRanking(e.target.value as RankingMode)}><option value="products">Dispositivos más caros</option><option value="sellers">Vendedores por ganancia</option></select></header>
   <ol className={styles.ranking}>{ranking==="products"?expensive.map((r,i)=><li key={r.productId}><span className={styles.place}>{i+1}</span><div><strong>{r.product}</strong><small>{r.supplier}</small></div><b>{formatUsd(r.unitCost)}</b></li>):sellers.map((r,i)=><li key={String(r.id)}><span className={styles.place}>{i+1}</span><div><strong>{r.name}</strong><small>{r.units} ventas</small></div><b>{formatUsd(r.profit)}</b></li>)}</ol>
   {!(ranking==="products"?expensive:sellers).length&&<div className={styles.empty}>Sin movimientos en este período.</div>}
@@ -38,7 +38,7 @@ function SalesDetail({report}:{report:Report}) {
 export default function ReportsScreen() {
  const {raw,today,loading}=useProgram();
  const [period,setPeriod]=useState<Period>("today");
- const [pie,setPie]=useState<PieMode>("products");
+ const [pie,setPie]=useState<PieMode>("purchasedUnits");
  const [ranking,setRanking]=useState<RankingMode>("products");
  const [modal,setModal]=useState<"custom"|"result"|"sellers"|null>(null);
  const [scope,setScope]=useState<"both"|"purchases"|"sales">("both");
@@ -91,7 +91,7 @@ export default function ReportsScreen() {
     <div className={styles.field}><label htmlFor="report-product">Dispositivo</label><select id="report-product" name="product"><option value="">Todos</option>{raw.products.map(p=><option key={p.id} value={p.id}>{p.marca} · {p.nombre}</option>)}</select></div>
     <div className={styles.field}><label htmlFor="report-supplier">Proveedor</label><select id="report-supplier" name="supplier"><option value="">Todos</option>{raw.suppliers.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></div>
     {scope==="sales"&&<><div className={styles.field}><label htmlFor="report-client">Cliente</label><select id="report-client" name="client"><option value="">Todos</option>{raw.clients.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></div><div className={styles.field}><label htmlFor="report-seller">Vendedor</label><select id="report-seller" name="seller"><option value="">Todos</option>{raw.sellers.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}</select></div></>}
-    <div className={styles.field}><label htmlFor="report-pie">Gráfico</label><select id="report-pie" name="pie" defaultValue={pie}><option value="products">Unidades</option><option value="clients">Clientes</option><option value="suppliers">Proveedores</option></select></div>
+    <div className={styles.field}><label htmlFor="report-pie">Gráfico</label><select id="report-pie" name="pie" defaultValue={pie}><option value="purchasedUnits">Unidades compradas</option><option value="soldUnits">Unidades vendidas</option><option value="suppliers">Proveedores a los que más compramos</option><option value="clients">Clientes que más compraron</option></select></div>
     <div className={styles.field}><label htmlFor="report-ranking">Ranking</label><select id="report-ranking" name="ranking" defaultValue={ranking}><option value="products">Dispositivos más caros</option><option value="sellers">Vendedores por ganancia</option></select></div></div>
     <label className={styles.check}><input type="checkbox" name="details" defaultChecked/>Incluir detalle de operaciones</label>
     {error&&<p role="alert" className="operation-error">{error}</p>}

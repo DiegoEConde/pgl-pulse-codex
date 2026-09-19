@@ -17,6 +17,7 @@ export type StockUnit = {
   variant: string; ram: string; color: string; code: string; purchaseOrder: number;
   supplier: string; receivedAt: string; costUsd: number; salePriceUsd: number | null;
   state: string;
+  attributes: Record<string, string>;
 };
 // Contrato de pgl_snapshot; charts se conserva por compatibilidad con la base existente.
 export type SalePayment = { id: number; unidad_id: number; importe_usd: number; registrado_en: string; solicitud_id: string };

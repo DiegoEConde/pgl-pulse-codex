@@ -102,7 +102,6 @@
 .legend li { line-height:1.3; padding-block:3px; }
 @media (min-width:741px) and (min-height:741px) { .legend { max-height:250px; } }
 
-.periodRow { margin-top:10px; }
 .dateSelector { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:14px; }
 .dateSelector input,.dateSelector select { min-width:130px; min-height:34px; padding:6px 10px; color:var(--text); background:#0b1118; border:1px solid var(--line); border-radius:8px; font:14px var(--font-mono); color-scheme:dark; }
 .dateSelector input:focus,.dateSelector select:focus { outline:1px solid var(--blue); }

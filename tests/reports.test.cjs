@@ -37,11 +37,13 @@ test("Ranking de vendedores usa ganancia y no facturación",()=>{
  const r=reports.makeReport(reports.reportFacts(fixture()),reports.periodRange("today","2026-09-11"));
  assert.deepEqual(reports.productiveSellers(r).map(x=>x.name),["Luis","Ana"]);
  assert.deepEqual(reports.reportSlices(r,"clients").map(x=>x.value),[1,1]);
+ assert.deepEqual(reports.reportSlices(r,"soldUnits").map(x=>x.value),[1,1]);
+ assert.deepEqual(reports.reportSlices(r,"suppliers").map(x=>x.value),[3]);
 });
 test("Top 10 respeta empates y conserva todos los segmentos para Hoy",()=>{
  const raw=fixture();for(let id=3;id<=14;id++){raw.products.push({id,marca:"M",nombre:"Equipo "+id});raw.lines.push({id:id+10,pedido_id:2,producto_id:id,cantidad:1,precio_costo_usd:id});}
  const r=reports.makeReport(reports.reportFacts(raw),reports.periodRange("today","2026-09-11"));
- assert.equal(reports.reportSlices(r,"products").length,14);assert.equal(reports.reportSlices(r,"products",true).length,10);
+ assert.equal(reports.reportSlices(r,"purchasedUnits").length,14);assert.equal(reports.reportSlices(r,"purchasedUnits",true).length,10);
  assert.equal(reports.expensiveProducts(r).length,5);
 });
 test("Filtros de vendedor y cliente y rangos vacíos",()=>{

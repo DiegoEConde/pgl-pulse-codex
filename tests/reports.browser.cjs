@@ -56,7 +56,7 @@ for(let id=1;id<=2;id++)snapshot.units.push({id,pedido_id:id,producto_id:id,clie
   await seller.getByRole("button",{name:"Ana",exact:true}).click();await seller.getByText("Ticket promedio",{exact:true}).waitFor();assert.ok((await seller.innerText()).includes("200"));
   await seller.getByRole("button",{name:"Sin ventas",exact:true}).click();await seller.getByText("Sin ventas en este período.",{exact:true}).waitFor();
   await page.keyboard.press("Escape");
-  await page.getByRole("combobox",{name:"Distribución por",exact:true}).selectOption("products");
+  await page.getByRole("combobox",{name:"Distribución por",exact:true}).selectOption("purchasedUnits");
   await page.getByRole("combobox",{name:"Ranking de",exact:true}).selectOption("products");
   for(const [width,height] of [[1440,900],[1280,720],[1024,600],[768,1024],[820,600],[390,844]]){
    await page.setViewportSize({width,height});await page.waitForTimeout(150);

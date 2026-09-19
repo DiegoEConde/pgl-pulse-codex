@@ -11,7 +11,7 @@ import CharacteristicInput from "./CharacteristicInput";
 import NewPurchaseProduct from "./NewPurchaseProduct";
 import { memoryLabel } from "@/lib/purchase-details";
 import { formatUsd } from "@/lib/formatters";
-import { formatDate } from "@/lib/dates";
+import { formatDate, previousDate } from "@/lib/dates";
 import type { PurchaseOrder, PurchaseStatus } from "@/types/operations";
 import layout from "@/components/ui/OperationalLayout.module.css";
 import styles from "./PurchasesScreen.module.css";
@@ -21,7 +21,8 @@ export default function PurchasesScreen() {
   const { raw, orders, today } = useProgram();
   const { busy, error, setError, run } = useOperation();
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<PurchaseStatus | "TODOS">("TODOS");
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyDate, setHistoryDate] = useState("");
   const [detailId, setDetailId] = useState<number | null>(null);
   const detail = orders.find(order => order.id === detailId);
   const [creating, setCreating] = useState(false);
@@ -47,9 +48,9 @@ export default function PurchasesScreen() {
     document.body.style.overflow = "hidden";
     return () => { document.body.style.overflow = previous; };
   }, [modalOpen]);
-  const matches = (order: PurchaseOrder) => `${order.id} ${order.supplier} ${order.products.join(" ")}`.toLowerCase().includes(search.toLowerCase()) && (status === "TODOS" || order.status === status);
+  const matches = (order: PurchaseOrder) => `${order.id} ${order.supplier} ${order.products.join(" ")}`.toLowerCase().includes(search.toLowerCase());
   const todayOrders = orders.filter(order => order.date === today && !order.closed && matches(order));
-  const history = orders.filter(order => (order.date !== today || order.closed) && matches(order));
+  const history = orders.filter(order => (order.date !== today || order.closed) && (!historyDate || order.date === historyDate) && matches(order));
   // La recepción pide un registro por unidad física, no uno por línea de compra.
   const receiptRows = detail?.lines.flatMap(line => Array.from({ length: line.cantidad }, (_, index) => ({ line, key: line.id + "-" + index }))) ?? [];
 
@@ -85,8 +86,8 @@ export default function PurchasesScreen() {
     <PageHeader title="Compras" action={<button className={`primary-btn ${layout.headAction}`} disabled={!raw.suppliers.length} onClick={() => { requestId.current = crypto.randomUUID(); setLineKeys([++lineCounter.current]); setSelectedProducts({}); setCreating(true); setNotice(""); setDirty(false); setError(""); }}><Plus size={16} /> Nueva compra</button>} />
     {notice && <p role="status">{notice}</p>}
     {!raw.suppliers.length && <p>Creá un proveedor en Datos para registrar compras.</p>}
-    <div className={layout.toolbar}><label className={layout.searchWrap}><Search size={15} /><input className="search" aria-label="Buscar compras" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar pedido, proveedor o producto…" /></label><select className="filter" aria-label="Estado de compra" value={status} onChange={e => setStatus(e.target.value as typeof status)}><option value="TODOS">Todos los estados</option>{Object.keys(statusClass).map(value => <option key={value}>{value}</option>)}</select></div>
-    <WorkspaceTabs labels={["Pedidos de hoy", "Historial"]}>
+    <div className={layout.toolbar}><label className={layout.searchWrap}><Search size={15} /><input className="search" aria-label="Buscar compras" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar pedido, proveedor o producto…" /></label>{historyOpen && <label className={layout.dateFilter}><span>Fecha del historial</span><input type="date" value={historyDate} max={previousDate(today)} onChange={e => setHistoryDate(e.target.value)} /></label>}</div>
+    <WorkspaceTabs labels={["Pedidos de hoy", "Historial"]} onChange={index => setHistoryOpen(index === 1)}>
     <section className="panel"><header className="panel-head"><div><span className="eyebrow">Operación del día · {formatDate(today)}</span><h2>Pedidos de hoy</h2></div><span className="badge blue">{todayOrders.length} pedidos</span></header><div className="table-wrap">{table(todayOrders, "No hay pedidos abiertos para hoy.")}</div></section>
     <section className="panel"><header className="panel-head"><h2>Historial</h2><span className="badge muted-badge">{history.length} resultados</span></header><div className="table-wrap">{table(history, "No hay pedidos que coincidan con la búsqueda.")}</div></section>
     </WorkspaceTabs>

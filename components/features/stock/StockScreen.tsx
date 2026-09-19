@@ -14,7 +14,7 @@ import layout from "@/components/ui/OperationalLayout.module.css";
 import styles from "./StockScreen.module.css";
 
 export default function StockScreen() {
-  const { stock: units } = useProgram();
+  const { stock: units, raw } = useProgram();
   const { busy, error, setError, run } = useOperation();
   const [search, setSearch] = useState("");
   const [brand, setBrand] = useState("TODAS");
@@ -22,6 +22,16 @@ export default function StockScreen() {
   const [supplier, setSupplier] = useState("TODOS");
   const [detailId, setDetailId] = useState<number | null>(null);
   const detail = units.find(unit => unit.databaseId === detailId && unit.state === "STOCK");
+  const rawUnit = raw.units.find(unit => unit.id === detail?.databaseId);
+  const product = raw.products.find(item => item.id === rawUnit?.producto_id);
+  const categoryId = product?.categoria_id ?? raw.categories?.find(item => item.nombre === product?.categoria.toLowerCase())?.id;
+  const characteristicKeys = new Set((raw.categoryCharacteristics ?? []).filter(item => item.categoria_id === categoryId).map(item => item.clave));
+  const needsCode = Boolean(detail && !detail.code);
+  const needsRam = Boolean(detail && characteristicKeys.has("ram") && !detail.ram);
+  const needsVariant = Boolean(detail && [...characteristicKeys].some(key => key !== "color" && key !== "ram") && !detail.variant);
+  const hasMissingData = needsCode || needsRam || needsVariant;
+  const characteristicEntries = detail ? (raw.categoryCharacteristics ?? []).filter(item => item.categoria_id === categoryId && item.clave !== "color").map(field => ({ label: field.etiqueta, value: detail.attributes[field.clave] || (field.clave === "ram" ? detail.ram : field.clave === "rom" ? detail.attributes.rom || detail.variant : "") })).filter(item => item.value) : [];
+  const characteristicSummary = (unit: typeof units[number]) => Object.values(unit.attributes).filter(Boolean).join(" · ") || [unit.ram, unit.variant].filter(Boolean).join(" · ") || "—";
 
   const stockUnits = units.filter((unit) => unit.state === "STOCK");
   const brands = [...new Set(stockUnits.map((unit) => unit.brand))];
@@ -114,7 +124,7 @@ export default function StockScreen() {
                   <th>Código</th>
                   <th>Nombre</th>
                   <th>IMEI / serie</th>
-                  <th>Variante</th>
+                  <th>Características</th>
                   <th>Color</th>
                   <th>Pedido de origen</th>
                   <th>Proveedor</th>
@@ -131,9 +141,7 @@ export default function StockScreen() {
                       <strong>{unit.product}</strong>
                     </td>
                     <td className="mono">{unit.code}</td>
-                    <td className="product-cell">
-                      <strong>{unit.ram ? unit.ram + " RAM · " + unit.variant + " ROM" : unit.variant}</strong>
-                    </td>
+                    <td className="product-cell"><strong>{characteristicSummary(unit)}</strong></td>
                     <td>{unit.color}</td>
                     <td>Pedido #{unit.purchaseOrder}</td>
                     <td>{unit.supplier}</td>
@@ -176,10 +184,11 @@ export default function StockScreen() {
                   </span>,
                 ],
                 ["IMEI / código", detail.code],
-                ["Variante", detail.variant],
+                ["Proveedor", detail.supplier],
                 ["Color", detail.color],
                 ["Costo", formatUsd(detail.costUsd)],
                 ["Ingreso a stock", formatDate(detail.receivedAt)],
+                ...characteristicEntries.map(item => [item.label, item.value]),
               ].map(([label, value]) => (
                 <div className={styles.detailItem} key={String(label)}>
                   <small>{label}</small>
@@ -190,45 +199,14 @@ export default function StockScreen() {
             <form onSubmit={event => {
               event.preventDefault();
               const form = new FormData(event.currentTarget);
-              void run(() => runOperation("pgl_update_stock", { p_id: detail.databaseId, p_code: String(form.get("code") ?? ""),
-                p_variant: String(form.get("variant") ?? ""), p_ram: String(form.get("ram") ?? ""),
-                p_suggested: String(form.get("suggested") ?? "") === "" ? undefined : Number(form.get("suggested")) }), () => setDetailId(null));
-            }}><fieldset className="form-fields" disabled={busy}><div className={formStyles.form}><h3>Completar datos de la unidad</h3><div className={formStyles.formGrid}>
-              <div className={formStyles.field}><label htmlFor="stock-code">IMEI / serie</label><input id="stock-code" name="code" maxLength={120} defaultValue={detail.code} /></div>
-              <div className={formStyles.field}><label htmlFor="stock-variant">Variante / almacenamiento</label><input id="stock-variant" name="variant" maxLength={120} defaultValue={detail.variant} /></div>
-              <div className={formStyles.field}><label htmlFor="stock-ram">RAM</label><input id="stock-ram" name="ram" maxLength={60} defaultValue={detail.ram} /></div>
-              <div className={formStyles.field}><label htmlFor="stock-price">Precio sugerido USD</label><input id="stock-price" name="suggested" type="number" min="0" step="0.01" defaultValue={detail.salePriceUsd ?? ""} /></div>
-            </div>{error && <p role="alert" className="operation-error">{error}</p>}<button className="primary-btn" type="submit">{busy ? "Guardando…" : "Guardar unidad"}</button></div></fieldset></form>
-            <div className={styles.body}>
-              <div className={styles.bodyTitle}>
-                <h3>Trazabilidad</h3>
-              </div>
-              <div className={styles.timeline}>
-                <div className={styles.step}>
-                  <span className={styles.dot} />
-                  <div>
-                    <strong>Pedido #{detail.purchaseOrder}</strong>
-                    <small>{detail.supplier} · origen comercial</small>
-                  </div>
-                </div>
-                <div className={styles.step}>
-                  <span className={styles.dot} />
-                  <div>
-                    <strong>Recepción confirmada</strong>
-                    <small>
-                      {formatDate(detail.receivedAt)} · identidad física creada
-                    </small>
-                  </div>
-                </div>
-                <div className={styles.step}>
-                  <span className={styles.dot} />
-                  <div>
-                    <strong>Disponible en Stock</strong>
-                    <small>Lista para ser seleccionada en una venta</small>
-                  </div>
-                </div>
-              </div>
-            </div>
+              void run(() => runOperation("pgl_update_stock", { p_id: detail.databaseId, p_code: needsCode ? String(form.get("code") ?? "") : detail.code,
+                p_variant: needsVariant ? String(form.get("variant") ?? "") : detail.variant, p_ram: needsRam ? String(form.get("ram") ?? "") : detail.ram,
+                p_suggested: detail.salePriceUsd ?? undefined }), () => setDetailId(null));
+            }}><fieldset className="form-fields" disabled={busy}><div className={formStyles.form}><h3>Completar datos de la unidad</h3>{hasMissingData ? <><div className={formStyles.formGrid}>
+              {needsCode && <div className={formStyles.field}><label htmlFor="stock-code">IMEI / serie</label><input id="stock-code" name="code" maxLength={120} /></div>}
+              {needsVariant && <div className={formStyles.field}><label htmlFor="stock-variant">Variante / almacenamiento</label><input id="stock-variant" name="variant" maxLength={120} /></div>}
+              {needsRam && <div className={formStyles.field}><label htmlFor="stock-ram">RAM</label><input id="stock-ram" name="ram" maxLength={60} /></div>}
+            </div>{error && <p role="alert" className="operation-error">{error}</p>}<button className="primary-btn" type="submit">{busy ? "Guardando…" : "Guardar unidad"}</button></> : <p className={styles.complete}>La unidad ya tiene todos sus datos completos.</p>}</div></fieldset></form>
           </section>
         </div>
       )}

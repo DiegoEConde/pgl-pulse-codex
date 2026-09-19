@@ -47,6 +47,11 @@ test("RAM/ROM, notas, cantidades y costo sobreviven al snapshot y a la derivacio
  const line=groups(JSON.parse(JSON.stringify(raw)))[0].lines[0];assert.equal(line.ram,"12");assert.equal(line.rom,"128");assert.equal(line.cost,450.25);assert.equal(line.quantity,3);
  const derived=deriveOperations(raw).orders[0];assert.equal(derived.notes,"Llamar antes");assert.equal(derived.lines[0].ram,"12");assert.equal(derived.lines[0].rom,"128");
 });
+test("Stock hereda RAM y almacenamiento definidos al crear el pedido",()=>{
+ const raw=fixture();add(raw,1,1,{estado:"RECIBIDO",observaciones:details.encodePurchaseDetails("",[{producto_id:1,color:"Negro",ram:"16",rom:"512"}])});
+ raw.units.push({id:1,pedido_id:1,detalle_pedido_id:1,producto_id:1,color:"Negro",estado:"STOCK",codigo:null,variante:null,ram:null,precio_costo_usd:450,costo_envio_usd:0,precio_sugerido_usd:null,fecha_ingreso_stock:"2026-09-18T12:00:00-03:00"});
+ const unit=deriveOperations(raw).stock[0];assert.equal(unit.ram,"16");assert.equal(unit.variant,"512");
+});
 test("RAM/ROM no se mezcla entre pedidos ni colores del mismo modelo",()=>{
  const raw=fixture();add(raw,1,1,{observaciones:details.encodePurchaseDetails("",[{producto_id:1,color:"Negro",ram:"8",rom:"256"}])});
  add(raw,2,1,{observaciones:details.encodePurchaseDetails("",[{producto_id:1,color:"Negro",ram:"12",rom:"128"}])});

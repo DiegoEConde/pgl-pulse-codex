@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownToLine, ArrowRight, BellRing, ChartNoAxesCombined, CircleDollarSign, ClipboardCheck, ClipboardList, PackageSearch, ScanBarcode, Wallet } from "lucide-react";
+import { ArrowDownToLine, ArrowRight, BellRing, ChartNoAxesCombined, CircleDollarSign, ClipboardCheck, ClipboardList, PackageSearch, Users, Wallet } from "lucide-react";
 import { useEffect, useState } from "react";
 import { OPERATIONAL_TIME_ZONE } from "@/lib/dates";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
@@ -49,12 +49,17 @@ export default function DashboardScreen() {
     return { name: supplier.nombre, total: Math.max(0, billed - paid) };
   }).filter(item => item.total > 0);
   const debtTotal = debts.reduce((sum, item) => sum + item.total, 0);
+  const clientDebts = raw.clients.map(client => ({
+    name: client.nombre,
+    total: sales.filter(sale => sale.clientId === client.id).reduce((sum, sale) => sum + sale.pendingUsd, 0),
+  })).filter(item => item.total > 0);
+  const clientDebtTotal = clientDebts.reduce((sum, item) => sum + item.total, 0);
   const alerts = [
-    { icon: ScanBarcode, title: "Unidades sin IMEI", description: "Stock con identificación pendiente", color: "var(--red)", count: raw.units.filter(unit => !unit.codigo).length },
-    { icon: PackageSearch, title: "Stock incompleto", description: "Unidades con datos pendientes", color: "var(--amber)", count: raw.units.filter(unit => !unit.codigo || !unit.precio_sugerido_usd).length },
-    { icon: ClipboardList, title: "Pedidos sin recepcionar", description: "Validá la recepción por proveedor", color: "var(--violet)", count: pendingOrders.length },
-    { icon: Wallet, title: "Deudas con proveedores", description: "Pedidos recibidos con saldo", color: "var(--amber)", count: debts.length },
-  ];
+    { icon: PackageSearch, title: "Unidades con datos incompletos", description: "Completá la identificación del stock", color: "var(--red)", count: raw.units.filter(unit => !unit.codigo).length, page: "stock" as const },
+    { icon: ClipboardList, title: "Pedidos sin recepcionar", description: "Validá la recepción por proveedor", color: "var(--violet)", count: pendingOrders.length, page: "reparto" as const },
+    { icon: Wallet, title: "Deudas con proveedores", description: "Pedidos recibidos con saldo", color: "var(--amber)", count: debts.length, page: "reparto" as const },
+    { icon: Users, title: "Deudas de clientes", description: "Ventas con saldo pendiente", color: "var(--cyan)", count: clientDebts.length, page: "ventas" as const },
+  ].filter(alert => alert.count > 0);
 
   return <div className={`view ${styles.page}`}>
     <PageHeader title={greeting} />
@@ -78,16 +83,23 @@ export default function DashboardScreen() {
         <footer className={styles.purchaseFooter}><span className={styles.statusDot} /><p>{!dailyOrders.length ? "Todavía no hay compras registradas hoy." : drafts ? `${drafts} pedidos creados esperan confirmación.` : "Todos los pedidos del día están confirmados."}</p><button className={styles.link} onClick={() => navigate("reparto")}>Ir a Reparto <ArrowRight size={14} /></button></footer>
       </article>
 
-      <article className={styles.card + " " + styles.debt}>
-        <header className={styles.cardHead}><div><span className={styles.kicker}>Cuenta de proveedores</span><h2>Deuda pendiente</h2></div><Wallet size={20} className={styles.debtIcon} /></header>
-        <div className={styles.debtTotal}><strong>{formatUsd(debtTotal)}</strong><span>Total por pagar</span></div>
-        <div className={styles.debtTable}><table><thead><tr><th>Proveedor</th><th>Total</th></tr></thead><tbody>{debts.length ? debts.map(item => <tr key={item.name}><td>{item.name}</td><td>{formatUsd(item.total)}</td></tr>) : <tr><td colSpan={2}>No hay saldos pendientes.</td></tr>}</tbody></table></div>
-      </article>
+      <section className={styles.financeGrid} aria-label="Saldos pendientes">
+        <article className={styles.card + " " + styles.debt}>
+          <header className={styles.cardHead}><span className={styles.kicker}>Deuda pendiente con proveedores</span><Wallet size={20} className={styles.debtIcon} /></header>
+          <div className={styles.debtTotal}><strong>{formatUsd(debtTotal)}</strong><span>Total por pagar</span></div>
+          <div className={styles.debtTable}><table><thead><tr><th>Proveedor</th><th>Total</th></tr></thead><tbody>{debts.length ? debts.map(item => <tr key={item.name}><td>{item.name}</td><td>{formatUsd(item.total)}</td></tr>) : <tr><td colSpan={2}>No hay saldos pendientes.</td></tr>}</tbody></table></div>
+        </article>
+        <article className={styles.card + " " + styles.clientDebt}>
+          <header className={styles.cardHead}><span className={styles.kicker}>Deuda pendiente de clientes</span><Users size={20} className={styles.clientDebtIcon} /></header>
+          <div className={styles.clientDebtTotal}><strong>{formatUsd(clientDebtTotal)}</strong><span>Total por cobrar</span></div>
+          <div className={styles.debtTable}><table><thead><tr><th>Cliente</th><th>Total</th></tr></thead><tbody>{clientDebts.length ? clientDebts.map(item => <tr key={item.name}><td>{item.name}</td><td>{formatUsd(item.total)}</td></tr>) : <tr><td colSpan={2}>No hay saldos pendientes.</td></tr>}</tbody></table></div>
+        </article>
+      </section>
 
       <aside className={styles.card + " " + styles.alerts} aria-labelledby="alerts-title">
-        <header className={styles.alertHeader}><span className={styles.bell}><BellRing size={21} /></span><div><span className={styles.kicker}>Seguimiento</span><h2 id="alerts-title">Centro de alertas</h2></div></header>
-        <p className={styles.alertIntro}>Los pendientes de tu operación, en un solo lugar.</p>
-        <div className={styles.alertList}>{alerts.map(({ icon: Icon, title, description, color, count }) => <div className={styles.alertItem} key={title} style={{ "--alert-color": color } as React.CSSProperties}><div className={styles.alertItemHead}><Icon size={19} /><strong>{count}</strong></div><h3>{title}</h3><p>{description}</p></div>)}</div>
+        <header className={styles.alertHeader}><span className={styles.bell}><BellRing size={21} /></span><h2 id="alerts-title">Centro de alertas</h2></header>
+        <p className={styles.alertIntro}>{alerts.length ? "Los pendientes de tu operación, en un solo lugar." : "No hay alertas pendientes."}</p>
+        {alerts.length > 0 && <div className={styles.alertList}>{alerts.map(({ icon: Icon, title, description, color, count, page }) => <button className={styles.alertItem} key={title} style={{ "--alert-color": color } as React.CSSProperties} onClick={() => navigate(page)}><div className={styles.alertItemHead}><Icon size={19} /><strong>{count}</strong></div><h3>{title}</h3><p>{description}</p></button>)}</div>}
         <footer className={styles.alertFooter}><span className={styles.statusDot} />Datos actualizados desde la operación</footer>
       </aside>
     </div>

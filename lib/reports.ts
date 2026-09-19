@@ -2,13 +2,13 @@ import type { Snapshot } from "@/types/operations";
 import { operationalDate } from "./dates";
 
 export type Period = "today" | "month" | "semester" | "year";
-export type PieMode = "products" | "clients" | "suppliers";
+export type PieMode = "purchasedUnits" | "soldUnits" | "suppliers" | "clients";
 export type RankingMode = "products" | "sellers";
 export type ReportFilter = { start: string; end: string; scope?: "both" | "purchases" | "sales"; product?: string; supplier?: string; seller?: string; client?: string };
 export type Fact = { id: number; date: string; productId: number; product: string; supplierId: number; supplier: string; sellerId: number | null; seller: string; clientId: number | null; client: string; quantity: number; unitCost: number; cost: number; revenue: number; commission: number; profit: number; paid: boolean; state: string };
 export type Slice = { id: string; label: string; value: number };
 export const periodLabels: Record<Period,string> = { today:"Hoy", month:"Mes", semester:"Semestre", year:"Año" };
-export const pieLabels: Record<PieMode,string> = { products:"Unidades", clients:"Clientes", suppliers:"Proveedores" };
+export const pieLabels: Record<PieMode,string> = { purchasedUnits:"Unidades compradas", soldUnits:"Unidades vendidas", suppliers:"Proveedores a los que más compramos", clients:"Clientes que más compraron" };
 // El semestre es móvil: mes elegido y cinco anteriores. El período actual termina hoy.
 export function periodRange(period: Period, today: string, selected?: string) {
   const value = selected || (period === "today" ? today : period === "year" ? today.slice(0,4) : today.slice(0,7));
@@ -68,9 +68,9 @@ export type Report = ReturnType<typeof makeReport>;
 export function reportSlices(report: Report, mode: PieMode, top = false): Slice[] {
   // Agrupa por ID: dos clientes o proveedores pueden tener el mismo nombre.
   const grouped = new Map<string,Slice>();
-  for (const row of mode === "clients" ? report.sales : report.purchases) {
-    const id=String(mode==="products"?row.productId:mode==="clients"?row.clientId:row.supplierId);
-    const label=mode==="products"?row.product:mode==="clients"?row.client:row.supplier;
+  for (const row of mode === "clients" || mode === "soldUnits" ? report.sales : report.purchases) {
+    const id=String(mode==="purchasedUnits"||mode==="soldUnits"?row.productId:mode==="clients"?row.clientId:row.supplierId);
+    const label=mode==="purchasedUnits"||mode==="soldUnits"?row.product:mode==="clients"?row.client:row.supplier;
     const entry=grouped.get(id) ?? {id,label,value:0};entry.value+=row.quantity;grouped.set(id,entry);
   }
   const result=[...grouped.values()].sort((a,b)=>b.value-a.value || a.label.localeCompare(b.label) || a.id.localeCompare(b.id));

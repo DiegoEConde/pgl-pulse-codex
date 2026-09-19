@@ -1,7 +1,7 @@
 .page { min-height: 0; display: flex; flex-direction: column; gap: 18px; }
 .page :global(.page-head) { margin: 0; flex-shrink: 0; }
 .page :global(.page-head h1) { font-size: 30px; margin: 0; }
-.layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr); grid-template-rows: auto auto auto; gap: 16px; }
+.layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr); grid-template-rows: auto auto auto; gap: 16px; margin-top: 8px; }
 .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; min-width: 0; }
 .metrics :global(.metric) { min-height: 0; padding: 18px; }
 .metrics :global(.metric strong) { margin-top: 12px; font-size: clamp(22px, 2.4vw, 33px); }
@@ -25,10 +25,11 @@
 .statusDot { flex: 0 0 5px; width: 5px; height: 5px; border-radius: 50%; background: var(--blue); }
 .purchaseFooter p { flex: 1; margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
 .purchaseFooter p > span { display: block; color: #72869a; }
-.debt { grid-column: 1; grid-row: 3; }
+.financeGrid { grid-column:1; grid-row:3; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+.debt { min-width:0; }
 .debtIcon { color: var(--violet); }
 .debtTotal { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
-.debtTotal > strong { font-size: 28px; line-height: 1; }
+.debtTotal > strong { color:var(--red); font-size: 28px; line-height: 1; }
 .debtTotal > span:not(.previewBadge) { color: var(--muted); font-size: 14px; }
 .previewBadge { align-self: flex-start; display: inline-block; padding: 4px 7px; border: 1px solid var(--line); border-radius: 5px; color: #8b9fb4; font-size: 12px; font-weight: 500; }
 .debtTotal .previewBadge { margin-left: auto; align-self: center; }
@@ -36,13 +37,19 @@
 .debtTable th { padding: 8px 6px; color: var(--muted); font-size: 12px; text-align: right; border-block: 1px solid var(--line-soft); }
 .debtTable th:first-child { text-align: left; }
 .debtTable td { padding: 12px 6px 0; color: #72869a; font-size: 14px; white-space: normal; }
+.clientDebtIcon { color:var(--green); }
+.clientDebtTotal { display:flex; align-items:center; gap:12px; margin:10px 0; }
+.clientDebtTotal > strong { color:var(--green); font-size:28px; line-height:1; }
+.clientDebtTotal > span { color:var(--muted); font-size:14px; }
 .alerts { grid-column: 2; grid-row: 1 / 4; gap: 14px; background: linear-gradient(165deg,#131d2a,#0d141e); }
 .alertHeader { display: flex; gap: 10px; align-items: center; }
 .alertHeader h2 { font-size: 17px; }
 .bell { color: var(--amber); flex-shrink: 0; }
 .alertIntro { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
 .alertList { display: grid; gap: 10px; }
-.alertItem { padding: 13px; border: 1px solid var(--line); border-left: 2px solid var(--alert-color); border-radius: 9px; background: rgba(255,255,255,.015); }
+.alertItem { width:100%; padding: 13px; border: 1px solid var(--line); border-left: 2px solid var(--alert-color); border-radius: 9px; background: rgba(255,255,255,.015); color:var(--text); text-align:left; cursor:pointer; transition:border-color .18s ease,background .18s ease,transform .18s ease; }
+.alertItem:hover { border-color:var(--alert-color); background:rgba(255,255,255,.035); transform:translateY(-1px); }
+.alertItem:focus-visible { outline:2px solid var(--alert-color); outline-offset:2px; }
 .alertItemHead { display: flex; align-items: center; justify-content: space-between; color: var(--alert-color); }
 .alertItemHead strong { font: 22px var(--font-mono); }
 .alertItem h3 { margin: 8px 0 4px; font-size: 14px; font-weight: 600; }
@@ -52,6 +59,7 @@
   .page { gap: 14px; }
   .metrics { grid-column: 1 / -1; grid-row: 1; }
   .alerts { grid-row: 2 / 4; }
+  .financeGrid { gap:12px; }
   .layout, .metrics { gap: 12px; }
   .card { padding: 14px; }
   .alerts { gap: 10px; }
@@ -75,13 +83,14 @@
 @media (max-width: 740px) {
   .page { height: auto; min-height: 0; }
   .page :global(.page-head) { gap: 10px; }
-  .layout { display: flex; flex-direction: column; }
+  .layout { display: flex; flex-direction: column; margin-top: 6px; }
   .metrics { gap: 8px; grid-template-columns: minmax(0, 1fr); }
   .metrics :global(.metric) { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px; }
   .metrics :global(.metric-top) { font-size: 12px; letter-spacing: 0; }
   .metrics :global(.metric-icon) { display: none; }
   .metrics :global(.metric strong) { margin-top: 0; font-size: 22px; }
   .card { padding: 16px; }
+  .financeGrid { display:grid; grid-template-columns:1fr; }
   .purchaseSummary { flex-direction: column; align-items: stretch; gap: 18px; padding-block: 20px; }
   .progressSteps { gap: 12px; }
   .purchaseFooter { flex-wrap: wrap; }

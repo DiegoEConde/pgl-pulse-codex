@@ -8,8 +8,8 @@ import { useProgram } from "@/contexts/ProgramContext";
 import { useOperation } from "@/hooks/useOperation";
 import { runOperation } from "@/lib/supabase/operations";
 import { formatUsd } from "@/lib/formatters";
-import { formatDate } from "@/lib/dates";
-import type { Sale, SaleStatus } from "@/types/operations";
+import { formatDate, previousDate } from "@/lib/dates";
+import type { Sale } from "@/types/operations";
 import layout from "@/components/ui/OperationalLayout.module.css";
 import styles from "./SalesScreen.module.css";
 
@@ -18,7 +18,8 @@ export default function SalesScreen() {
   const { busy, error, setError, run } = useOperation();
   const available = stock.filter(unit => unit.state === "STOCK");
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<SaleStatus | "TODOS">("TODOS");
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyDate, setHistoryDate] = useState("");
   const [detailId, setDetailId] = useState<number | null>(null);
   const detail = sales.find(sale => sale.id === detailId);
   const [creating, setCreating] = useState(false);
@@ -42,9 +43,9 @@ export default function SalesScreen() {
       setPaymentAmount(""); setDirty(false); paymentRequest.current = crypto.randomUUID();
     });
   }
-  const matches = (sale: Sale) => `${sale.id} ${sale.product} ${sale.code} ${sale.client} ${sale.seller}`.toLowerCase().includes(search.toLowerCase()) && (status === "TODOS" || sale.status === status);
+  const matches = (sale: Sale) => `${sale.id} ${sale.product} ${sale.code} ${sale.client} ${sale.seller}`.toLowerCase().includes(search.toLowerCase());
   const salesToday = sales.filter(sale => sale.date === today && matches(sale));
-  const history = sales.filter(sale => sale.date !== today && matches(sale));
+  const history = sales.filter(sale => sale.date !== today && (!historyDate || sale.date === historyDate) && matches(sale));
   function close() {
     if (busy) return;
     if (dirty && !window.confirm("Hay cambios sin guardar. ¿Querés descartarlos?")) return;
@@ -66,8 +67,8 @@ export default function SalesScreen() {
     <PageHeader title="Ventas" action={<button className={`primary-btn ${layout.headAction}`} disabled={!paymentsReady || !available.length || !raw.clients.length || !raw.sellers.length} onClick={() => { setUnitId(String(available[0]?.databaseId ?? "")); requestId.current = crypto.randomUUID(); setCreating(true); setDirty(false); setError(""); }}><Plus size={16} /> Nueva venta</button>} />
     {!paymentsReady && <p role="status">El registro de cobros todavía no está habilitado. Podés consultar las ventas existentes.</p>}
     {paymentsReady && missingSaleRequirements.length > 0 && <p role="status">Para crear una venta necesitás cargar: {missingSaleRequirements.join(", ")}. Los clientes y vendedores se cargan en Datos.</p>}
-    <div className={layout.toolbar}><label className={layout.searchWrap}><Search size={15} /><input className="search" aria-label="Buscar ventas" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar venta, cliente o unidad…" /></label><select className="filter" aria-label="Estado de venta" value={status} onChange={e => setStatus(e.target.value as typeof status)}><option value="TODOS">Todos los estados</option><option value="REPARTO">En reparto</option><option value="ENTREGADA">Entregada</option></select></div>
-    <WorkspaceTabs labels={["Ventas de hoy", "Historial"]}>
+    <div className={layout.toolbar}><label className={layout.searchWrap}><Search size={15} /><input className="search" aria-label="Buscar ventas" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar venta, cliente o unidad…" /></label>{historyOpen && <label className={layout.dateFilter}><span>Fecha del historial</span><input type="date" value={historyDate} max={previousDate(today)} onChange={e => setHistoryDate(e.target.value)} /></label>}</div>
+    <WorkspaceTabs labels={["Ventas de hoy", "Historial"]} onChange={index => setHistoryOpen(index === 1)}>
     <section className="panel"><header className="panel-head"><div><span className="eyebrow">{formatDate(today)}</span><h2>Ventas de hoy</h2></div><span className="badge blue">{salesToday.length} ventas</span></header><div className="table-wrap">{table(salesToday)}</div></section>
     <section className="panel"><header className="panel-head"><h2>Historial</h2><span className="badge muted-badge">{history.length} resultados</span></header><div className="table-wrap">{table(history)}</div></section>
     </WorkspaceTabs>

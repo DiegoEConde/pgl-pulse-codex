@@ -13,3 +13,8 @@ export function formatDate(value: string | null | undefined) {
   if (Number.isNaN(date.getTime())) return "—";
   return new Intl.DateTimeFormat("es-AR", { timeZone: OPERATIONAL_TIME_ZONE, day: "2-digit", month: "short", year: "numeric" }).format(date);
 }
+export function previousDate(value: string): string {
+  const date = new Date(value + "T12:00:00Z");
+  date.setUTCDate(date.getUTCDate() - 1);
+  return date.toISOString().slice(0, 10);
+}

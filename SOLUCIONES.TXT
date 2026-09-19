@@ -1,6 +1,6 @@
-en pedidos y en general:
-- Cambia US$ por USD
-- la direccion y telefono, en vez de ponerlo debajo del nombre del proveedor, ponelo a la derecha (usando la misma fuente y colores)
-- que la parte de pedidos sin confirmar, que diga, pedidos sin recepcionar (queda mas profesional)
-- quita el comentario debajo del boton de generar pedidos
-- al abrir los pedidos sin confirmar, que al lado de cada nombre de proveedor, se vea la fecha en la que se hizo el pedido. lo mismo en el modal de validacion, que se vea al lado del numero de pedido, separado por un -
+en la pantalla inicio:
+- la tarjeta de deuda pendiente, quita lo que dice deuda pendiente, y donde dice cuenta de proveedores que diga deuda pendiente con proveedores
+- en la misma tarjeta, que el valor adeudado se vea en rojo
+- acorta la tarjeta a la mitad y coloca al lado otra igual, pero que esta traiga el dato de deuda con clientes
+- en el centro de alertas, que los pendientes (manteniendo la misma estetica), sean botones que lleven al usuario directamente al sitio donde gestionar dichas alertas
+- tambien quita lo de seguimiento y deja, al lado de la campana, centro de alertas

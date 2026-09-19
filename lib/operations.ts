@@ -23,11 +23,17 @@ export function deriveOperations(data: Snapshot) {
   const stock: StockUnit[] = data.units.map(unit => {
     const product = products.get(unit.producto_id);
     const order = ordersById.get(unit.pedido_id);
+    const purchaseLine = orders.find(item => item.id === unit.pedido_id)?.lines.find(line => line.id === unit.detalle_pedido_id);
+    const rawLine = data.lines.find(line => line.id === unit.detalle_pedido_id);
+    const orderedVariant = purchaseLine ? [purchaseLine.rom, purchaseLine.variant].filter(Boolean).join(" · ") : "";
+    const attributes = { ...(rawLine?.atributos ?? {}) };
+    if (purchaseLine?.ram) attributes.ram = purchaseLine.ram;
+    if (purchaseLine?.rom) attributes.rom = purchaseLine.rom;
     return { id: "U-" + unit.id, databaseId: unit.id, product: product?.nombre ?? "—", brand: product?.marca ?? "—",
-      category: product?.categoria ?? "—", variant: unit.variante ?? "", ram: unit.ram ?? "", color: unit.color,
+      category: product?.categoria ?? "—", variant: unit.variante ?? orderedVariant, ram: unit.ram ?? purchaseLine?.ram ?? "", color: unit.color,
       code: unit.codigo ?? "", purchaseOrder: unit.pedido_id, supplier: suppliers.get(order?.proveedor_id ?? 0)?.nombre ?? "—",
       receivedAt: operationalDate(unit.fecha_ingreso_stock), costUsd: unit.precio_costo_usd + unit.costo_envio_usd,
-      salePriceUsd: unit.precio_sugerido_usd, state: unit.estado };
+      salePriceUsd: unit.precio_sugerido_usd, state: unit.estado, attributes };
   });
   const sales: Sale[] = data.units.filter(unit => unit.fecha_venta && (unit.estado === "REPARTO" || unit.estado === "ENTREGADA")).map(unit => {
     const payments = (data.salePayments ?? []).filter(payment => payment.unidad_id === unit.id);
