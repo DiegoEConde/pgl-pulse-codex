@@ -69,3 +69,39 @@ test("Selecciones históricas incluyen el período completo y seis meses cruzand
  assert.deepEqual(reports.periodRange("today","2026-09-11","2026-08-21"),{start:"2026-08-21",end:"2026-08-21"});
  assert.equal(reports.periodRange("month","2026-09-11","2026-09").end,"2026-09-11");
 });
+
+test("Nuevos rankings agrupan cantidades por ID y limitan a cinco",()=>{
+ const raw=fixture();raw.units.push({...raw.units[0],id:8});
+ const r=reports.makeReport(reports.reportFacts(raw),reports.periodRange("today","2026-09-11"));
+ assert.equal(reports.reportRanking(r,"bestSellers")[0].value,2);
+ assert.equal(reports.reportRanking(r,"clients")[0].value,2);
+ assert.equal(reports.reportRanking(r,"suppliers")[0].value,3);
+ assert.equal(reports.reportSlices(r,"sellers")[0].label,"Ana");
+});
+test("Series personalizadas: promedios ponderados, negativos, filtros y fechas sin actividad",()=>{
+ const raw=fixture();raw.units.push({...raw.units[0],id:8,precio_venta_usd:0});
+ const r=reports.makeReport(reports.reportFacts(raw),{start:"2026-09-10",end:"2026-09-12"});
+ const config={chart:"list",metric:"averageSale",dimension:"product",order:"desc",limit:0};
+ assert.equal(reports.customSeries(r,config).find(x=>x.id==="1").value,75);
+ assert.ok(reports.customSeries(r,{...config,metric:"profit"}).some(x=>x.value<0));
+ assert.deepEqual(reports.customSeries(r,{...config,metric:"soldUnits",dimension:"day",chart:"line",limit:1}).map(x=>x.value),[0,3,0]);
+ assert.equal(reports.customSeries(r,{...config,metric:"purchaseCost"}).reduce((s,x)=>s+x.value,0),40.05);
+ const pie=reports.customSeries(r,{...config,chart:"pie",metric:"soldUnits",limit:1});
+ assert.equal(pie.at(-1).label,"Otros");assert.equal(pie.reduce((s,x)=>s+x.value,0),3);
+ const empty=reports.makeReport(reports.reportFacts(raw),{start:"2020-01-01",end:"2020-01-02"});
+ assert.deepEqual(reports.customSeries(empty,config),[]);
+});
+
+test("Más caros vendidos usa el precio máximo por producto, no la facturación ni el costo",()=>{
+ const raw=fixture();
+ raw.units.push({...raw.units[0],id:8,precio_venta_usd:50});
+ raw.units.push({...raw.units[0],id:9,precio_venta_usd:9999,fecha_venta:"2025-01-01"});
+ for(let id=3;id<=8;id++){raw.products.push({id,marca:"M",nombre:"Equipo "+id});raw.units.push({...raw.units[0],id:20+id,producto_id:id,precio_venta_usd:id*100});}
+ const r=reports.makeReport(reports.reportFacts(raw),reports.periodRange("today","2026-09-11"));
+ assert.deepEqual(reports.reportRanking(r,"soldProducts").map(x=>x.value),[800,700,600,500,400]);
+ const one=reports.makeReport(reports.reportFacts(raw),{...r.filter,product:"1"});
+ assert.equal(reports.reportRanking(one,"soldProducts")[0].value,150);
+ assert.equal(reports.reportRanking(one,"products")[0].value,10);
+ const empty=reports.makeReport(reports.reportFacts(raw),{start:"2020-01-01",end:"2020-01-02"});
+ assert.deepEqual(reports.reportRanking(empty,"soldProducts"),[]);
+});

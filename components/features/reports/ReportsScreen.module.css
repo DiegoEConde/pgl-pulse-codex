@@ -105,3 +105,23 @@
 .dateSelector { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:14px; }
 .dateSelector input,.dateSelector select { min-width:130px; min-height:34px; padding:6px 10px; color:var(--text); background:#0b1118; border:1px solid var(--line); border-radius:8px; font:14px var(--font-mono); color-scheme:dark; }
 .dateSelector input:focus,.dateSelector select:focus { outline:1px solid var(--blue); }
+
+.choiceGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:16px 0 22px; }
+.choice { display:grid; justify-items:start; gap:8px; padding:18px; text-align:left; color:var(--text); background:var(--surface); border:1px solid var(--line); border-radius:12px; }
+.choice svg { color:var(--cyan); }
+.choice small { color:var(--muted); line-height:1.5; }
+.choice[aria-pressed="true"] { border-color:var(--blue); background:rgba(51,156,255,.12); }
+.choice:focus-visible { outline:2px solid var(--cyan); outline-offset:3px; }
+.customResult { display:grid; gap:18px; min-width:0; }
+.customResult caption { text-align:left; padding:12px; color:var(--muted); }
+.customChartWrap { overflow:auto; max-height:600px; }
+.customChart { width:100%; min-width:600px; display:block; }
+@media(max-width:500px) { .choiceGrid { grid-template-columns:1fr; } .modalActions { flex-wrap:wrap; } }
+
+.customResult > * { min-width:0; }
+
+.selectionHeader { display:flex; align-items:center; gap:16px; margin-bottom:22px; }
+.selectionHeader > button { min-height:40px; padding:8px 12px; flex-shrink:0; }
+.selectedFormat { display:flex; align-items:center; gap:10px; color:var(--cyan); }
+.selectedFormat strong { color:var(--text); }
+.selectedFormat small { display:block; margin-top:4px; color:var(--muted); }

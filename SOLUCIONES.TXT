@@ -1,6 +1,6 @@
-en la pamtalla datos:
-- al abrir el modal de carga de nuevo producto. tiene que verse un select con todas las categorias (ordenadas alfabeticamente y con mayustculas y minisculas)
-- tras elegir una, el modal se adapta y todos los input son los relativos a los productos de esa categoria
-- no puede repetirse un producto, si todo lo que el usuario pone es igual a uno ya existente, se le avisa con un alert y un texto en rojo en la parte superior del modal. grande y claro
-- que todos los modales de carga de toda la seccion sean similares entre ellos, manteniendo la misma estetica (y que sea la misma que venimos usando hasta ahora)
-- que el boton de volver a datos destaque un poco mas
+en la pamtalla reportes:
+- en el primer grafico, que el select sea de unidades compradas, unidades vendidas, proveedores (a los que se compro), clientes (a los que se les vendio), vendedores
+- en la tabla de al lado, que haga el top 5 de: dispositivos mas vendidos, dispositivos mas caros, clientes (los que mas cantidad compraron), proveedores (a los que mas cantidad se les compro)
+- reporte personalizado. quiero que de variedad de opciones al usuario para generar sus propias graficas y estadisticas.
+- lo primero que le pedira es si quiere un grafico (que elija entre 4 opciones de graficos), o una lista ordenada. 
+- luego, se abriran todas las opciones necesarias para que cree su propio informe (usa informacion que haya por la web para generar esta seccion)

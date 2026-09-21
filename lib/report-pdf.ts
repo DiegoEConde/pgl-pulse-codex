@@ -1,5 +1,5 @@
 import type { Report, PieMode, RankingMode } from "./reports";
-import { reportSlices, expensiveProducts, productiveSellers, pieLabels } from "./reports";
+import { reportSlices, reportRanking, rankingLabels, pieLabels } from "./reports";
 
 export async function exportReportPdf(report: Report, title: string, mode: PieMode, ranking: RankingMode, top: boolean, details = false) {
  // Carga la librería solo al exportar; el documento se genera en el navegador.
@@ -35,8 +35,8 @@ export async function exportReportPdf(report: Report, title: string, mode: PieMo
   }
   for(const row of data)line(row.label+": "+row.value+" unidades");
  }else line("Sin movimientos en este período.");
- y+=5;line(ranking==="products"?"Top 5 - Dispositivos más caros (costo unitario)":"Top 5 - Vendedores por ganancia",14);
- const ranks=ranking==="products"?expensiveProducts(report).map(r=>r.product+" | "+r.supplier+" | "+usd(r.unitCost)):productiveSellers(report).map(r=>r.name+" | Ganancia: "+usd(r.profit)+" | "+r.units+" ventas");
+ y+=5;line("Top 5 - "+rankingLabels[ranking]+(ranking==="products"?" (costo unitario)":ranking==="soldProducts"?" (precio unitario de venta)":""),14);
+ const ranks=reportRanking(report,ranking).map(r=>r.label+" | "+(ranking==="products"||ranking==="soldProducts"?usd(r.value):r.value+" unidades"));
  if(!ranks.length)line("Sin movimientos en este período.");
  ranks.forEach((text,i)=>line((i+1)+". "+text));
  if(details){

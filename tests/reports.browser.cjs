@@ -26,7 +26,9 @@ for(let id=1;id<=2;id++)snapshot.units.push({id,pedido_id:id,producto_id:id,clie
   assert.equal(await page.locator('[role="tabpanel"] svg[role="img"] title').count(),12);
   for(const period of ["Mes","Semestre","Año"]){await page.getByRole("tab",{name:period,exact:true}).click();assert.equal(await page.locator('[role="tabpanel"] svg[role="img"] title').count(),10);}
   await page.getByRole("combobox",{name:"Distribución por",exact:true}).selectOption("clients");assert.equal(await page.locator('[role="tabpanel"] svg[role="img"] title').count(),2);
-  await page.getByRole("combobox",{name:"Ranking de",exact:true}).selectOption("sellers");assert.ok((await page.locator('[role="tabpanel"] ol li').first().innerText()).includes("Luis"));
+  await page.getByRole("combobox",{name:"Ranking de",exact:true}).selectOption("suppliers");assert.ok((await page.locator('[role="tabpanel"] ol li').first().innerText()).includes("Roman"));
+  for(const mode of ["purchasedUnits","soldUnits","suppliers","clients","sellers"]) { await page.getByRole("combobox",{name:"Distribución por",exact:true}).selectOption(mode); assert.ok(await page.locator('[role="tabpanel"] svg[role="img"] title').count()); }
+  for(const mode of ["bestSellers","products","soldProducts","clients","suppliers"]) { await page.getByRole("combobox",{name:"Ranking de",exact:true}).selectOption(mode); assert.ok(await page.locator('[role="tabpanel"] ol li').count()<=5); }
   await page.getByRole("tab",{name:"Mes",exact:true}).click();
   assert.equal(await page.getByLabel("Mes del reporte",{exact:true}).getAttribute("type"),"month");
   await page.getByLabel("Mes del reporte",{exact:true}).fill("2020-02");assert.equal(await metrics.nth(1).locator("strong").textContent(),"0");
@@ -43,13 +45,43 @@ for(let id=1;id<=2;id++)snapshot.units.push({id,pedido_id:id,producto_id:id,clie
   }
   await pdf(page.getByRole("button",{name:"Exportar a PDF",exact:true}),"tests/artifacts/reports-current.pdf");
   await page.getByRole("button",{name:"Reporte personalizado",exact:true}).click();
+  assert.equal(await page.getByLabel("Título",{exact:true}).count(),0);
+  await page.getByRole("button",{name:/Gráfico Elegí/}).click();
+  await page.getByRole("button",{name:/Barras horizontales/}).click();
+  assert.equal(await page.getByRole("button",{name:/Lista ordenada Compará/}).count(),0);
+  assert.equal(await page.getByRole("button",{name:/^Columnas/}).count(),0);
   await page.getByLabel("Título",{exact:true}).fill("Ventas de Ana");
-  await page.getByLabel("Operaciones",{exact:true}).selectOption("sales");
+  await page.getByRole("button",{name:"Volver",exact:true}).click();
+  await page.getByRole("button",{name:/Barras horizontales/}).click();
+  assert.equal(await page.getByLabel("Título",{exact:true}).inputValue(),"Ventas de Ana");
+  await page.getByLabel("Qué medir",{exact:true}).selectOption("revenue");
   await page.getByLabel("Vendedor",{exact:true}).selectOption("1");
-  await page.getByLabel("Gráfico",{exact:true}).selectOption("clients");
+  await page.getByLabel("Agrupar por",{exact:true}).selectOption("client");
   await page.getByRole("button",{name:"Generar reporte",exact:true}).click();
-  const result=page.getByRole("dialog",{name:"Ventas de Ana",exact:true});await result.waitFor();assert.ok((await result.innerText()).includes("Cliente Uno"));assert.ok(!(await result.innerText()).includes("Cliente Dos"));
+  const result=page.getByRole("region",{name:"Resultado del reporte",exact:true});await result.waitFor();assert.ok((await result.innerText()).includes("Cliente Uno"));assert.ok(!(await result.innerText()).includes("Cliente Dos"));
   await pdf(result.getByRole("button",{name:"Exportar a PDF",exact:true}),"tests/artifacts/reports-custom.pdf");
+  await result.getByRole("button",{name:"Editar informe",exact:true}).click();
+  assert.equal(await page.getByLabel("Título",{exact:true}).inputValue(),"Ventas de Ana");
+  for(const name of ["Columnas","Líneas","Circular"]) {
+   await page.getByRole("button",{name:"Volver",exact:true}).click();
+   await page.getByRole("button",{name:new RegExp("^"+name)}).click();
+   if(name==="Líneas")assert.deepEqual(await page.getByLabel("Agrupar por",{exact:true}).locator('option').evaluateAll(nodes=>nodes.map(n=>n.value)),["day","month"]);
+   await page.getByRole("button",{name:"Generar reporte",exact:true}).click();
+   await result.getByRole("img",{name,exact:true}).waitFor();
+   await pdf(result.getByRole("button",{name:"Exportar a PDF",exact:true}),"tests/artifacts/reports-"+name+".pdf");
+   await result.getByRole("button",{name:"Editar informe",exact:true}).click();
+  }
+  await page.getByRole("button",{name:"Volver",exact:true}).click();
+  await page.getByRole("button",{name:"Volver",exact:true}).click();
+  await page.getByRole("button",{name:/Lista ordenada Compará/}).click();
+  await page.getByLabel("Qué medir",{exact:true}).selectOption("purchasedUnits");
+  await page.getByLabel("Agrupar por",{exact:true}).selectOption("supplier");
+  assert.equal(await page.getByLabel("Vendedor",{exact:true}).count(),0);
+  await page.getByRole("button",{name:"Generar reporte",exact:true}).click();
+  await result.getByText("Unidades compradas por proveedor",{exact:true}).waitFor();
+  assert.equal(await result.locator('svg[role="img"]').count(),0);
+  assert.equal(await result.getByRole("row").count(),3);
+  await pdf(result.getByRole("button",{name:"Exportar a PDF",exact:true}),"tests/artifacts/reports-list.pdf");
   await page.keyboard.press("Escape");assert.equal(await page.getByRole("dialog").count(),0);
   await page.getByRole("button",{name:"Resumen de vendedores",exact:true}).click();
   const seller=page.getByRole("dialog",{name:"Resumen de vendedores",exact:true});
@@ -65,6 +97,12 @@ for(let id=1;id<=2;id++)snapshot.units.push({id,pedido_id:id,producto_id:id,clie
    if(width>740)assert.ok(size.sh<=size.h+1,"Vertical overflow "+JSON.stringify(size));
    await page.getByRole("button",{name:"Reporte personalizado",exact:true}).click();
    const dialog=page.getByRole("dialog");const box=await dialog.boundingBox();assert.ok(box.x>=0&&box.x+box.width<=width+1);
+   await dialog.getByRole("button",{name:/Gráfico Elegí/}).click();
+   await dialog.getByRole("button",{name:/Barras horizontales/}).click();
+   await dialog.getByRole("button",{name:"Generar reporte",exact:true}).click();
+   await dialog.getByRole("img",{name:"Barras horizontales",exact:true}).waitFor();
+   assert.ok(await dialog.evaluate(el=>el.scrollWidth<=el.clientWidth+1),"Custom result overflow");
+   if(width===390)await page.screenshot({path:"tests/artifacts/reports-custom-mobile.png",fullPage:true});
    await page.keyboard.press("Escape");
   }
   await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:"tests/artifacts/reports-mobile.png",fullPage:true});await page.setViewportSize({width:1440,height:900});await page.screenshot({path:"tests/artifacts/reports-desktop.png",fullPage:true});

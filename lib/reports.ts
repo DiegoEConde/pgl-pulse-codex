@@ -2,13 +2,13 @@ import type { Snapshot } from "@/types/operations";
 import { operationalDate } from "./dates";
 
 export type Period = "today" | "month" | "semester" | "year";
-export type PieMode = "purchasedUnits" | "soldUnits" | "suppliers" | "clients";
-export type RankingMode = "products" | "sellers";
+export type PieMode = "purchasedUnits" | "soldUnits" | "suppliers" | "clients" | "sellers";
+export type RankingMode = "products" | "soldProducts" | "bestSellers" | "clients" | "suppliers";
 export type ReportFilter = { start: string; end: string; scope?: "both" | "purchases" | "sales"; product?: string; supplier?: string; seller?: string; client?: string };
 export type Fact = { id: number; date: string; productId: number; product: string; supplierId: number; supplier: string; sellerId: number | null; seller: string; clientId: number | null; client: string; quantity: number; unitCost: number; cost: number; revenue: number; commission: number; profit: number; paid: boolean; state: string };
 export type Slice = { id: string; label: string; value: number };
 export const periodLabels: Record<Period,string> = { today:"Hoy", month:"Mes", semester:"Semestre", year:"Año" };
-export const pieLabels: Record<PieMode,string> = { purchasedUnits:"Unidades compradas", soldUnits:"Unidades vendidas", suppliers:"Proveedores a los que más compramos", clients:"Clientes que más compraron" };
+export const pieLabels: Record<PieMode,string> = { purchasedUnits:"Unidades compradas", soldUnits:"Unidades vendidas", suppliers:"Proveedores (compras)", clients:"Clientes (ventas)", sellers:"Vendedores" };
 // El semestre es móvil: mes elegido y cinco anteriores. El período actual termina hoy.
 export function periodRange(period: Period, today: string, selected?: string) {
   const value = selected || (period === "today" ? today : period === "year" ? today.slice(0,4) : today.slice(0,7));
@@ -68,9 +68,9 @@ export type Report = ReturnType<typeof makeReport>;
 export function reportSlices(report: Report, mode: PieMode, top = false): Slice[] {
   // Agrupa por ID: dos clientes o proveedores pueden tener el mismo nombre.
   const grouped = new Map<string,Slice>();
-  for (const row of mode === "clients" || mode === "soldUnits" ? report.sales : report.purchases) {
-    const id=String(mode==="purchasedUnits"||mode==="soldUnits"?row.productId:mode==="clients"?row.clientId:row.supplierId);
-    const label=mode==="purchasedUnits"||mode==="soldUnits"?row.product:mode==="clients"?row.client:row.supplier;
+  for (const row of mode === "sellers" || mode === "clients" || mode === "soldUnits" ? report.sales : report.purchases) {
+    const id=String(mode==="purchasedUnits"||mode==="soldUnits"?row.productId:mode==="clients"?row.clientId:mode==="sellers"?row.sellerId:row.supplierId);
+    const label=mode==="purchasedUnits"||mode==="soldUnits"?row.product:mode==="clients"?row.client:mode==="sellers"?row.seller:row.supplier;
     const entry=grouped.get(id) ?? {id,label,value:0};entry.value+=row.quantity;grouped.set(id,entry);
   }
   const result=[...grouped.values()].sort((a,b)=>b.value-a.value || a.label.localeCompare(b.label) || a.id.localeCompare(b.id));
@@ -85,4 +85,57 @@ export function productiveSellers(report: Report) {
   const grouped=new Map<number|null,{id:number|null;name:string;profit:number;revenue:number;commission:number;units:number}>();
   for(const row of report.sales) {const entry=grouped.get(row.sellerId) ?? {id:row.sellerId,name:row.seller,profit:0,revenue:0,commission:0,units:0};entry.profit+=cents(row.profit);entry.revenue+=cents(row.revenue);entry.commission+=cents(row.commission);entry.units++;grouped.set(row.sellerId,entry);}
   return [...grouped.values()].map(r=>({...r,profit:r.profit/100,revenue:r.revenue/100,commission:r.commission/100})).sort((a,b)=>b.profit-a.profit || b.revenue-a.revenue || a.name.localeCompare(b.name)).slice(0,5);
+}
+
+export const rankingLabels: Record<RankingMode,string> = { bestSellers:"Dispositivos más vendidos", products:"Dispositivos más caros comprados", soldProducts:"Dispositivos más caros vendidos", clients:"Clientes por unidades compradas", suppliers:"Proveedores por unidades compradas" };
+export function reportRanking(report: Report, mode: RankingMode): Slice[] {
+  if(mode === "soldProducts") {
+    const grouped=new Map<number,Slice>();
+    for(const row of report.sales) {
+      const price=row.revenue/row.quantity;
+      if(!grouped.has(row.productId)||grouped.get(row.productId)!.value<price)grouped.set(row.productId,{id:String(row.productId),label:row.product,value:price});
+    }
+    return [...grouped.values()].sort((a,b)=>b.value-a.value||a.label.localeCompare(b.label)||a.id.localeCompare(b.id)).slice(0,5);
+  }
+  if(mode === "products") return expensiveProducts(report).map(r=>({id:String(r.productId),label:r.product,value:r.unitCost}));
+  return reportSlices(report,mode === "bestSellers" ? "soldUnits" : mode).slice(0,5);
+}
+
+export type CustomMetric = "purchasedUnits" | "soldUnits" | "purchaseCost" | "revenue" | "profit" | "commission" | "averageSale";
+export type CustomDimension = "product" | "supplier" | "client" | "seller" | "day" | "month";
+export type CustomChart = "bars" | "columns" | "line" | "pie" | "list";
+export type CustomOptions = { metric:CustomMetric; dimension:CustomDimension; chart:CustomChart; order:"desc"|"asc"|"label"; limit:number };
+export const metricLabels: Record<CustomMetric,string> = {purchasedUnits:"Unidades compradas",soldUnits:"Unidades vendidas",purchaseCost:"Costo de compras (USD)",revenue:"Importe vendido (USD)",profit:"Ganancia (USD)",commission:"Comisiones (USD)",averageSale:"Precio promedio de venta (USD)"};
+export const dimensionLabels: Record<CustomDimension,string> = {product:"Dispositivo",supplier:"Proveedor",client:"Cliente",seller:"Vendedor",day:"Día",month:"Mes"};
+export const chartLabels: Record<CustomChart,string> = {bars:"Barras horizontales",columns:"Columnas",line:"Líneas",pie:"Circular",list:"Lista ordenada"};
+export const purchaseMetric = (metric:CustomMetric) => metric === "purchasedUnits" || metric === "purchaseCost";
+export const moneyMetric = (metric:CustomMetric) => metric !== "purchasedUnits" && metric !== "soldUnits";
+export function customSeries(report:Report, options:CustomOptions): Slice[] {
+  const {metric,dimension,chart,order,limit}=options;
+  const rows=purchaseMetric(metric)?report.purchases:report.sales;
+  const grouped=new Map<string,Slice & {count:number}>();
+  for(const row of rows) {
+    const id=dimension==="day"?row.date:dimension==="month"?row.date.slice(0,7):String(row[(dimension+"Id") as "productId"|"supplierId"|"clientId"|"sellerId"]);
+    const label=dimension==="day"||dimension==="month"?id:row[dimension];
+    const item=grouped.get(id)??{id,label,value:0,count:0};
+    item.value+=metric==="purchasedUnits"||metric==="soldUnits"?row.quantity:cents(row[metric==="purchaseCost"?"cost":metric==="averageSale"?"revenue":metric]);
+    item.count+=row.quantity;grouped.set(id,item);
+  }
+  // Zero-activity dates belong in a time series; averages without sales remain gaps.
+  if((dimension==="day"||dimension==="month") && rows.length && metric!=="averageSale") {
+    const cursor=new Date(report.filter.start+"T00:00:00Z");
+    if(dimension==="month")cursor.setUTCDate(1);
+    const end=new Date(report.filter.end+"T00:00:00Z");
+    for(let n=0;cursor<=end && n<36600;n++) {
+      const id=cursor.toISOString().slice(0,dimension==="day"?10:7);
+      if(!grouped.has(id))grouped.set(id,{id,label:id,value:0,count:0});
+      if(dimension==="day")cursor.setUTCDate(cursor.getUTCDate()+1);else cursor.setUTCMonth(cursor.getUTCMonth()+1);
+    }
+  }
+  const result=[...grouped.values()].map(r=>({id:r.id,label:r.label,value:moneyMetric(metric)?Math.round(r.value/(metric==="averageSale"?r.count:1))/100:r.value}));
+  result.sort((a,b)=>chart==="line"||order==="label"?a.label.localeCompare(b.label,"es"):(order==="asc"?a.value-b.value:b.value-a.value)||a.label.localeCompare(b.label,"es")||a.id.localeCompare(b.id));
+  if(chart==="line"||!limit||result.length<=limit)return result;
+  const visible=result.slice(0,limit);
+  if(chart==="pie")visible.push({id:"__others",label:"Otros",value:Math.round(result.slice(limit).reduce((sum,r)=>sum+r.value,0)*100)/100});
+  return visible;
 }
