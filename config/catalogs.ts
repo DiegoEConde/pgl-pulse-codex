@@ -1,5 +1,5 @@
 export type CatalogId = "products" | "suppliers" | "clients" | "sellers";
-export type MasterRecord = { id: number; nombre: string; [key: string]: string | number | null };
+export type MasterRecord = { id: number; nombre: string; [key: string]: string | number | null | Record<string, string> };
 export type CatalogField = { key: string; label: string; type?: "text" | "tel" | "time" | "number" | "textarea"; required?: boolean; maxLength?: number };
 export type CatalogConfig = { label: string; singular: string; table: string; description: string; fields: CatalogField[] };
 export const catalogConfig: Record<CatalogId, CatalogConfig> = {

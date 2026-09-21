@@ -7,7 +7,7 @@
 .catalogCard p { margin: 0; color: var(--muted); font-size: 15px; line-height: 1.55; }
 .cardFooter { display: flex; align-items: center; gap: 10px; margin-top: auto; padding-top: 21px; color: var(--cyan); font: 13px var(--font-mono); }
 .cardFooter b { color: var(--cyan); font-size: 24px; }
-.back { display: inline-flex; align-items: center; gap: 7px; width: max-content; min-height: 42px; padding: 8px 12px; color: #8da1b5; background: transparent; border: 1px solid var(--line); border-radius: 9px; font-size: 13px; }
+.back { display: inline-flex; align-items: center; gap: 7px; width: max-content; min-height: 42px; padding: 8px 12px; color: #d8eeff; background: rgba(51,156,255,.14); border: 1px solid #5289bb; border-radius: 9px; font-size: 14px; font-weight: 700; box-shadow: 0 4px 14px rgba(0,0,0,.18); }
 .back:hover { color: #d8e8f6; border-color: #31516d; background: rgba(51,156,255,.04); }
 .rowAction { display: inline-flex; align-items: center; gap: 5px; padding: 6px 9px; color: #83bded; background: transparent; border: 1px solid var(--line-soft); border-radius: 8px; font-size: 13px; }
 .rowAction:hover { background: rgba(51,156,255,.05); border-color: #31516d; }
@@ -52,9 +52,18 @@
 .searchSection { display: grid; gap: 10px; min-width: 0; }
 .textCell { min-width: 180px; max-width: 280px; white-space: normal; overflow-wrap: anywhere; line-height: 1.5; }
 .field textarea { min-height: 80px; resize: vertical; }
-.formError { margin: 0; color: var(--red); font-size: 15px; }
+.formError { margin: 0; padding: 16px; color: #ff9b9b; background: rgba(225,65,65,.12); border: 1px solid #a84242; border-radius: 10px; font-size: 18px; font-weight: 700; line-height: 1.5; }
+.inputGrid { display: grid; gap: 15px; min-width: 0; }
+.back:focus-visible, .close:focus-visible, .cancel:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 
 
 .formFields { border: 0; padding: 0; margin: 0; min-width: 0; }
 
 @media (min-width: 741px) { .catalogCard { min-height: 0; padding: 18px; } .catalogCard h2 { font-size: 20px; } .cardHeading { margin-bottom: 12px; } .cardFooter { padding-top: 14px; } .searchSection { grid-template-columns: auto minmax(0, 1fr); align-items: center; } }
+
+.inlineControl { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.inlineControl input, .inlineControl select { flex: 1; min-width: 0; }
+.iconButton { display: grid; place-items: center; flex-shrink: 0; width: 42px; height: 42px; color: #a9d8ff; background: rgba(51,156,255,.1); border: 1px solid #31516d; border-radius: 9px; }
+.iconButton:hover { background: rgba(51,156,255,.2); }
+.iconButton:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.iconButton:disabled { opacity: .45; cursor: not-allowed; }

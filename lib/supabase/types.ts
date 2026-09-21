@@ -147,6 +147,7 @@ export type Database = {
       }
       producto: {
         Row: {
+          atributos?: Record<string, string>
           categoria_id?: number
           categoria: string
           id: number
@@ -154,6 +155,7 @@ export type Database = {
           nombre: string
         }
         Insert: {
+          atributos?: Record<string, string>
           categoria_id?: number
           categoria: string
           id?: number
@@ -161,6 +163,7 @@ export type Database = {
           nombre: string
         }
         Update: {
+          atributos?: Record<string, string>
           categoria_id?: number
           categoria?: string
           id?: number

@@ -3,7 +3,7 @@ import type { Database } from "./types";
 import { catalogConfig, type CatalogId, type MasterRecord } from "@/config/catalogs";
 
 export async function persistRecord(catalog: CatalogId, record: MasterRecord, isNew: boolean): Promise<MasterRecord> {
-  const values: Record<string, string | number | null> = {};
+  const values: Record<string, string | number | null | Record<string, string>> = {};
   for (const field of catalogConfig[catalog].fields) values[field.key] = record[field.key] ?? null;
   // Envía solo campos del catálogo; los IDs nuevos los asigna PostgreSQL.
   const client = getSupabase();
@@ -11,6 +11,7 @@ export async function persistRecord(catalog: CatalogId, record: MasterRecord, is
     switch (catalog) {
       case "products": {
         values.marca ??= "";
+        values.atributos = record.atributos ?? {};
         const payload = values as Database["public"]["Tables"]["producto"]["Insert"];
         return isNew ? client.from("producto").insert(payload) : client.from("producto").update(payload).eq("id", record.id);
       }
