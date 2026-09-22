@@ -26,10 +26,9 @@ export default function StockScreen() {
   const product = raw.products.find(item => item.id === rawUnit?.producto_id);
   const categoryId = product?.categoria_id ?? raw.categories?.find(item => item.nombre === product?.categoria.toLowerCase())?.id;
   const characteristicKeys = new Set((raw.categoryCharacteristics ?? []).filter(item => item.categoria_id === categoryId).map(item => item.clave));
-  const needsCode = Boolean(detail && !detail.code);
   const needsRam = Boolean(detail && characteristicKeys.has("ram") && !detail.ram);
   const needsVariant = Boolean(detail && [...characteristicKeys].some(key => key !== "color" && key !== "ram") && !detail.variant);
-  const hasMissingData = needsCode || needsRam || needsVariant;
+  const hasMissingData = needsRam || needsVariant;
   const characteristicEntries = detail ? (raw.categoryCharacteristics ?? []).filter(item => item.categoria_id === categoryId && item.clave !== "color").map(field => ({ label: field.etiqueta, value: detail.attributes[field.clave] || (field.clave === "ram" ? detail.ram : field.clave === "rom" ? detail.attributes.rom || detail.variant : "") })).filter(item => item.value) : [];
   const characteristicSummary = (unit: typeof units[number]) => Object.values(unit.attributes).filter(Boolean).join(" · ") || [unit.ram, unit.variant].filter(Boolean).join(" · ") || "—";
 
@@ -41,7 +40,7 @@ export default function StockScreen() {
     () =>
       units.filter((unit) => {
         const text =
-          `${unit.id} ${unit.product} ${unit.code} ${unit.variant} ${unit.ram ?? ""} ${unit.color}`.toLowerCase();
+          `${unit.product} ${unit.supplier} ${unit.variant} ${unit.ram ?? ""} ${unit.color} ${Object.values(unit.attributes).filter(Boolean).join(" ")}`.toLowerCase();
         return (
           unit.state === "STOCK" &&
           text.includes(search.toLowerCase()) &&
@@ -72,7 +71,7 @@ export default function StockScreen() {
             className="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar producto, IMEI, código o color…"
+            placeholder="Buscar producto, proveedor, característica o color…"
           />
         </label>
         <select
@@ -121,9 +120,7 @@ export default function StockScreen() {
             <PagedTable>
               <thead>
                 <tr>
-                  <th>Código</th>
                   <th>Nombre</th>
-                  <th>IMEI / serie</th>
                   <th>Características</th>
                   <th>Color</th>
                   <th>Pedido de origen</th>
@@ -134,13 +131,9 @@ export default function StockScreen() {
               <tbody>
                 {filtered.map((unit) => (
                   <tr key={unit.id} onClick={() => setDetailId(unit.databaseId)}>
-                    <td>
-                      <span className={styles.unitId}>{unit.id}</span>
-                    </td>
                     <td className="product-cell">
                       <strong>{unit.product}</strong>
                     </td>
-                    <td className="mono">{unit.code}</td>
                     <td className="product-cell"><strong>{characteristicSummary(unit)}</strong></td>
                     <td>{unit.color}</td>
                     <td>Pedido #{unit.purchaseOrder}</td>
@@ -168,7 +161,7 @@ export default function StockScreen() {
           <section className={styles.modal} role="dialog" aria-modal="true">
             <header className={styles.modalHeader}>
               <div>
-                <span className="eyebrow">Unidad {detail.id}</span>
+                <span className="eyebrow">Detalle de stock</span>
                 <h2>{detail.product}</h2>
               </div>
               <button className={styles.close} aria-label="Cerrar stock" disabled={busy} onClick={() => { setDetailId(null); setError(""); }}>
@@ -183,7 +176,6 @@ export default function StockScreen() {
                     STOCK
                   </span>,
                 ],
-                ["IMEI / código", detail.code],
                 ["Proveedor", detail.supplier],
                 ["Color", detail.color],
                 ["Costo", formatUsd(detail.costUsd)],
@@ -199,11 +191,10 @@ export default function StockScreen() {
             <form onSubmit={event => {
               event.preventDefault();
               const form = new FormData(event.currentTarget);
-              void run(() => runOperation("pgl_update_stock", { p_id: detail.databaseId, p_code: needsCode ? String(form.get("code") ?? "") : detail.code,
+              void run(() => runOperation("pgl_update_stock", { p_id: detail.databaseId, p_code: detail.code,
                 p_variant: needsVariant ? String(form.get("variant") ?? "") : detail.variant, p_ram: needsRam ? String(form.get("ram") ?? "") : detail.ram,
                 p_suggested: detail.salePriceUsd ?? undefined }), () => setDetailId(null));
             }}><fieldset className="form-fields" disabled={busy}><div className={formStyles.form}><h3>Completar datos de la unidad</h3>{hasMissingData ? <><div className={formStyles.formGrid}>
-              {needsCode && <div className={formStyles.field}><label htmlFor="stock-code">IMEI / serie</label><input id="stock-code" name="code" maxLength={120} /></div>}
               {needsVariant && <div className={formStyles.field}><label htmlFor="stock-variant">Variante / almacenamiento</label><input id="stock-variant" name="variant" maxLength={120} /></div>}
               {needsRam && <div className={formStyles.field}><label htmlFor="stock-ram">RAM</label><input id="stock-ram" name="ram" maxLength={60} /></div>}
             </div>{error && <p role="alert" className="operation-error">{error}</p>}<button className="primary-btn" type="submit">{busy ? "Guardando…" : "Guardar unidad"}</button></> : <p className={styles.complete}>La unidad ya tiene todos sus datos completos.</p>}</div></fieldset></form>

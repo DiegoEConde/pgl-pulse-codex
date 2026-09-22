@@ -22,6 +22,14 @@
 .check input { margin-top: 1px; accent-color: var(--green); }
 .actions { display: flex; justify-content: flex-end; gap: 9px; padding: 0 24px 24px; }
 .cancel { padding: 10px 14px; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 9px; }
+.confirmOverlay { z-index: 75; }
+.confirmModal { width: min(500px, 100%); max-height: 90vh; overflow: auto; background: linear-gradient(180deg, rgba(16,23,32,0.98), rgba(12,17,24,0.98)); border: 1px solid rgba(241,189,101,.38); border-radius: 22px; box-shadow: 0 24px 70px rgba(0,0,0,.46), inset 0 1px 0 rgba(255,255,255,.04); }
+.confirmBody { display: grid; gap: 14px; padding: 22px 24px; color: var(--muted); line-height: 1.5; }
+.confirmBody p { margin: 0; }
+.confirmBody dl { display: grid; gap: 8px; margin: 0; }
+.confirmBody dl > div { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 10px 12px; background: rgba(255,255,255,.025); border: 1px solid var(--line-soft); border-radius: 9px; }
+.confirmBody dt { color: var(--dim); font: 12px var(--font-mono); text-transform: uppercase; }
+.confirmBody dd { margin: 0; color: var(--text); font-weight: 700; }
 .detailGrid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line-soft); }
 .detailItem { padding: 18px 22px; border-right: 1px solid var(--line-soft); border-bottom: 1px solid var(--line-soft); }
 .detailItem small, .detailItem strong { display: block; }

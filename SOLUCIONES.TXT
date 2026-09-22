@@ -1,6 +1,24 @@
-en la pamtalla reportes:
-- en el primer grafico, que el select sea de unidades compradas, unidades vendidas, proveedores (a los que se compro), clientes (a los que se les vendio), vendedores
-- en la tabla de al lado, que haga el top 5 de: dispositivos mas vendidos, dispositivos mas caros, clientes (los que mas cantidad compraron), proveedores (a los que mas cantidad se les compro)
-- reporte personalizado. quiero que de variedad de opciones al usuario para generar sus propias graficas y estadisticas.
-- lo primero que le pedira es si quiere un grafico (que elija entre 4 opciones de graficos), o una lista ordenada. 
-- luego, se abriran todas las opciones necesarias para que cree su propio informe (usa informacion que haya por la web para generar esta seccion)
+- refresco automatico de pantalla
+
+Cosas a arreglar (version celular):
+- en compras y ventas, cuando se selecciona el historial, no se ve la fecha en el select de fechas. arregla eso.
+- en el lado opuesto del buenas noches, deberia haber un boton con forma de campana amarilla que abra un menu desplegable desde la derecha que me muestre el div de las alertas
+- en stock, coloca al lado opuesto del titulo la cantidad de dispositivos en stock. queda muy cargado uno arriba del otro. mejor en la misma linea en lados opuestos
+- que todo el header tenga efecto glass.
+
+Compras:
+- no quiero ver el codigo de la unidad
+- al crear una nueva compra, la fecha de pedido tiene que estar bloqueada a la fecha actual. no puede modificarse
+- Al seleccionar producto, lo primero que tiene que aparecer es la categoria, una vez seleccionada, se abre la lista de productos en ella y luego las caracteristicas de cada categoria
+
+
+Ventas:
+- no quiero ver el codigo de la unidad
+- al registrar ventas, lo primero que tiene que aparecer es la categoria y al seleccionarla, que se abran las unidades disponibles en stock y ahi se puedan elegir.
+- cuando se agrega un precio de venta y se valida la venta, si el precio de venta es menor que el precio de compra, que salga una alerta (en modal) informando de la diferencia y pidiendo confirmacion
+- al seleccionar vendedor, que solo se vea el nombre, el porcentaje de comision.
+- no quiero cargar el porcentaje de comision en la venta, esto es automatico para los reportes
+
+
+Stock:
+- no quiero que se vea el codigo de unidades en el stock, es un dato interno

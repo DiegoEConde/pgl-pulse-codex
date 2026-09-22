@@ -46,6 +46,7 @@
 .purchaseModal .field { gap: 4px; }
 .purchaseModal .field label { font-size: 13px; letter-spacing: 0; color: #a5b6c6; }
 .purchaseModal .field input, .purchaseModal .field select { height: 36px; padding: 6px 10px; font-size: 15px; }
+.purchaseModal .field input:disabled, .purchaseModal .field select:disabled { opacity: 1; color: #9fb4c8; background: #101821; cursor: not-allowed; }
 .purchaseModal .field textarea { min-height: 40px; height: 40px; padding: 8px 10px; font: inherit; font-size: 15px; }
 .purchaseModal .receiptLine { gap: 10px; padding: 12px; border-radius: 8px; }
 .purchaseModal .receiptLine h3 { font-size: 16px; letter-spacing: 0; }

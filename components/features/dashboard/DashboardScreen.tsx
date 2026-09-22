@@ -2,7 +2,7 @@
 
 import { ArrowDownToLine, ArrowRight, BellRing, ChartNoAxesCombined, CircleDollarSign, ClipboardCheck, ClipboardList, PackageSearch, Users, Wallet, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { OPERATIONAL_TIME_ZONE } from "@/lib/dates";
+import { formatDate, OPERATIONAL_TIME_ZONE } from "@/lib/dates";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
 import MetricCard from "@/components/ui/MetricCard/MetricCard";
 import { useApp } from "@/contexts/AppContext";
@@ -41,7 +41,8 @@ export default function DashboardScreen() {
     return () => window.removeEventListener("keydown", close);
   }, [alertsOpen]);
   const { navigate } = useApp();
-  const { sales, orders, today, raw } = useProgram();
+  const { sales, orders, stock, today, raw } = useProgram();
+  const formattedToday = formatDate(today);
   const dailySales = sales.filter(sale => sale.date === today);
   const dailyOrders = orders.filter(order => order.date === today);
   const drafts = dailyOrders.filter(order => order.status === "BORRADOR").length;
@@ -61,8 +62,18 @@ export default function DashboardScreen() {
     total: sales.filter(sale => sale.clientId === client.id).reduce((sum, sale) => sum + sale.pendingUsd, 0),
   })).filter(item => item.total > 0);
   const clientDebtTotal = clientDebts.reduce((sum, item) => sum + item.total, 0);
+  const incompleteStockCount = stock.filter(unit => {
+    if (unit.state !== "STOCK") return false;
+    const rawUnit = raw.units.find(item => item.id === unit.databaseId);
+    const product = raw.products.find(item => item.id === rawUnit?.producto_id);
+    const categoryId = product?.categoria_id ?? raw.categories?.find(item => item.nombre === product?.categoria.toLowerCase())?.id;
+    const characteristicKeys = new Set((raw.categoryCharacteristics ?? []).filter(item => item.categoria_id === categoryId).map(item => item.clave));
+    const needsRam = characteristicKeys.has("ram") && !unit.ram;
+    const needsVariant = [...characteristicKeys].some(key => key !== "color" && key !== "ram") && !unit.variant;
+    return needsRam || needsVariant;
+  }).length;
   const alerts = [
-    { icon: PackageSearch, title: "Unidades con datos incompletos", description: "Completá la identificación del stock", color: "var(--red)", count: raw.units.filter(unit => !unit.codigo).length, page: "stock" as const },
+    { icon: PackageSearch, title: "Unidades con datos incompletos", description: "Completá los atributos visibles del stock", color: "var(--red)", count: incompleteStockCount, page: "stock" as const },
     { icon: ClipboardList, title: "Pedidos sin recepcionar", description: "Validá la recepción por proveedor", color: "var(--violet)", count: pendingOrders.length, page: "reparto" as const },
     { icon: Wallet, title: "Deudas con proveedores", description: "Pedidos recibidos con saldo", color: "var(--amber)", count: debts.length, page: "reparto" as const },
     { icon: Users, title: "Deudas de clientes", description: "Ventas con saldo pendiente", color: "var(--cyan)", count: clientDebts.length, page: "ventas" as const },
@@ -83,13 +94,18 @@ export default function DashboardScreen() {
   return <div className={`view ${styles.page}`}>
     <PageHeader
       title={greeting}
+      description={formattedToday}
       action={
-        <div className={styles.alertMenu}>
-          <button type="button" className={styles.alertTrigger} aria-label="Abrir centro de alertas" aria-expanded={alertsOpen} aria-controls="dashboard-alerts-menu" onClick={() => setAlertsOpen(open => !open)}>
-            <BellRing size={21} />
-            {alerts.length > 0 && <span>{alerts.length}</span>}
-          </button>
-          {alertsOpen && <div id="dashboard-alerts-menu" className={styles.alertDropdown}>{alertCenter(styles.dropdownAlerts, true)}</div>}
+        <div className={styles.headerActions}>
+          <div className={`date-block ${styles.desktopDate}`}><b>Operación del día</b>{formattedToday}</div>
+          <div className={styles.alertMenu}>
+            <button type="button" className={styles.alertTrigger} aria-label="Abrir centro de alertas" aria-expanded={alertsOpen} aria-controls="dashboard-alerts-menu" onClick={() => setAlertsOpen(open => !open)}>
+              <BellRing size={21} />
+              {alerts.length > 0 && <span>{alerts.length}</span>}
+            </button>
+            {alertsOpen && <button type="button" className={styles.alertBackdrop} aria-label="Cerrar alertas" onClick={() => setAlertsOpen(false)} />}
+            {alertsOpen && <div id="dashboard-alerts-menu" className={styles.alertDropdown}>{alertCenter(styles.dropdownAlerts, true)}</div>}
+          </div>
         </div>
       }
     />
