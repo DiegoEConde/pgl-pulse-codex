@@ -12,7 +12,7 @@ export default function Header() {
   return (
     <header className="topbar">
       <Logo />
-      <Navigation open={menuOpen} />
+      <Navigation open={menuOpen} onNavigate={() => setMenuOpen(false)} />
       <button className="system-state connection-button" disabled={loading || refreshing} onClick={() => void refresh()} aria-label="Actualizar datos"><span /><div><b>{loading || refreshing ? "Actualizando" : error ? "Sin conexión" : "Conectado"}</b><small>Supabase · Actualizar</small></div></button>
       <button className="mobile-menu" onClick={() => setMenuOpen((value) => !value)} aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}>
         {menuOpen ? <X size={22} /> : <Menu size={22} />}

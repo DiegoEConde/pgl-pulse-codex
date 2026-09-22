@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowDownToLine, ArrowRight, BellRing, ChartNoAxesCombined, CircleDollarSign, ClipboardCheck, ClipboardList, PackageSearch, Users, Wallet } from "lucide-react";
+import { ArrowDownToLine, ArrowRight, BellRing, ChartNoAxesCombined, CircleDollarSign, ClipboardCheck, ClipboardList, PackageSearch, Users, Wallet, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { OPERATIONAL_TIME_ZONE } from "@/lib/dates";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
@@ -24,6 +24,7 @@ function currentGreeting() {
 
 export default function DashboardScreen() {
   const [greeting, setGreeting] = useState(currentGreeting);
+  const [alertsOpen, setAlertsOpen] = useState(false);
   useEffect(() => {
     const update = () => setGreeting(currentGreeting());
     const interval = window.setInterval(update, 1000);
@@ -33,6 +34,12 @@ export default function DashboardScreen() {
       window.removeEventListener("focus", update);
     };
   }, []);
+  useEffect(() => {
+    if (!alertsOpen) return;
+    const close = (event: KeyboardEvent) => { if (event.key === "Escape") setAlertsOpen(false); };
+    window.addEventListener("keydown", close);
+    return () => window.removeEventListener("keydown", close);
+  }, [alertsOpen]);
   const { navigate } = useApp();
   const { sales, orders, today, raw } = useProgram();
   const dailySales = sales.filter(sale => sale.date === today);
@@ -60,9 +67,32 @@ export default function DashboardScreen() {
     { icon: Wallet, title: "Deudas con proveedores", description: "Pedidos recibidos con saldo", color: "var(--amber)", count: debts.length, page: "reparto" as const },
     { icon: Users, title: "Deudas de clientes", description: "Ventas con saldo pendiente", color: "var(--cyan)", count: clientDebts.length, page: "ventas" as const },
   ].filter(alert => alert.count > 0);
+  const alertCenter = (className: string, compact = false) => (
+    <aside className={`${styles.card} ${styles.alerts} ${className}`} aria-labelledby={compact ? "alerts-menu-title" : "alerts-title"}>
+      <header className={styles.alertHeader}>
+        <span className={styles.bell}><BellRing size={21} /></span>
+        <h2 id={compact ? "alerts-menu-title" : "alerts-title"}>Centro de alertas</h2>
+        {compact && <button type="button" className={styles.alertClose} aria-label="Cerrar alertas" onClick={() => setAlertsOpen(false)}><X size={18} /></button>}
+      </header>
+      <p className={styles.alertIntro}>{alerts.length ? "Los pendientes de tu operación, en un solo lugar." : "No hay alertas pendientes."}</p>
+      {alerts.length > 0 && <div className={styles.alertList}>{alerts.map(({ icon: Icon, title, description, color, count, page }) => <button className={styles.alertItem} key={title} style={{ "--alert-color": color } as React.CSSProperties} onClick={() => { setAlertsOpen(false); navigate(page); }}><div className={styles.alertItemHead}><Icon size={19} /><strong>{count}</strong></div><h3>{title}</h3><p>{description}</p></button>)}</div>}
+      <footer className={styles.alertFooter}><span className={styles.statusDot} />Datos actualizados desde la operación</footer>
+    </aside>
+  );
 
   return <div className={`view ${styles.page}`}>
-    <PageHeader title={greeting} />
+    <PageHeader
+      title={greeting}
+      action={
+        <div className={styles.alertMenu}>
+          <button type="button" className={styles.alertTrigger} aria-label="Abrir centro de alertas" aria-expanded={alertsOpen} aria-controls="dashboard-alerts-menu" onClick={() => setAlertsOpen(open => !open)}>
+            <BellRing size={21} />
+            {alerts.length > 0 && <span>{alerts.length}</span>}
+          </button>
+          {alertsOpen && <div id="dashboard-alerts-menu" className={styles.alertDropdown}>{alertCenter(styles.dropdownAlerts, true)}</div>}
+        </div>
+      }
+    />
     <div className={styles.layout}>
       <section className={styles.metrics} aria-label="Resumen del día">
         <MetricCard label="Ventas de hoy" value={formatUsd(dailySales.reduce((sum, sale) => sum + sale.priceUsd, 0))} icon={<CircleDollarSign size={17} />} />
@@ -96,12 +126,7 @@ export default function DashboardScreen() {
         </article>
       </section>
 
-      <aside className={styles.card + " " + styles.alerts} aria-labelledby="alerts-title">
-        <header className={styles.alertHeader}><span className={styles.bell}><BellRing size={21} /></span><h2 id="alerts-title">Centro de alertas</h2></header>
-        <p className={styles.alertIntro}>{alerts.length ? "Los pendientes de tu operación, en un solo lugar." : "No hay alertas pendientes."}</p>
-        {alerts.length > 0 && <div className={styles.alertList}>{alerts.map(({ icon: Icon, title, description, color, count, page }) => <button className={styles.alertItem} key={title} style={{ "--alert-color": color } as React.CSSProperties} onClick={() => navigate(page)}><div className={styles.alertItemHead}><Icon size={19} /><strong>{count}</strong></div><h3>{title}</h3><p>{description}</p></button>)}</div>}
-        <footer className={styles.alertFooter}><span className={styles.statusDot} />Datos actualizados desde la operación</footer>
-      </aside>
+      {alertCenter(styles.fixedAlerts)}
     </div>
   </div>;
 }

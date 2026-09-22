@@ -1,6 +1,16 @@
 .page { min-height: 0; display: flex; flex-direction: column; gap: 18px; }
 .page :global(.page-head) { margin: 0; flex-shrink: 0; }
 .page :global(.page-head h1) { font-size: 30px; margin: 0; }
+.alertMenu { position: relative; margin-left: auto; }
+.alertTrigger { position: relative; display: grid; place-items: center; width: 44px; height: 44px; color: #ffe2a3; background: rgba(241,189,101,.14); border: 1px solid rgba(241,189,101,.58); border-radius: 999px; box-shadow: 0 12px 28px rgba(241,189,101,.16), inset 0 1px 0 rgba(255,255,255,.12); }
+.alertTrigger:hover,.alertTrigger[aria-expanded="true"] { color: #fff2c9; background: rgba(241,189,101,.22); border-color: rgba(241,189,101,.82); }
+.alertTrigger:focus-visible { outline: 2px solid var(--amber); outline-offset: 4px; }
+.alertTrigger span { position: absolute; top: -5px; right: -5px; display: grid; place-items: center; min-width: 19px; height: 19px; padding-inline: 5px; color: #211505; background: var(--amber); border-radius: 999px; font: 700 11px/1 var(--font-mono); box-shadow: 0 6px 14px rgba(0,0,0,.28); }
+.alertDropdown { position: absolute; top: calc(100% + 12px); right: 0; z-index: 40; width: min(380px, calc(100vw - 36px)); transform-origin: top right; animation: alert-menu-in .16s ease-out; }
+.dropdownAlerts { width: 100%; max-height: min(70vh, 560px); overflow: auto; box-shadow: 0 24px 70px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.04); }
+.alertClose { margin-left: auto; display: grid; place-items: center; width: 32px; height: 32px; color: var(--muted); background: rgba(255,255,255,.04); border: 1px solid var(--line); border-radius: 8px; }
+.alertClose:hover { color: var(--text); border-color: rgba(241,189,101,.55); }
+@keyframes alert-menu-in { from { opacity: 0; transform: translate(10px,-6px) scale(.98); } to { opacity: 1; transform: none; } }
 .layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr); grid-template-rows: auto auto auto; gap: 16px; margin-top: 8px; }
 .metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; min-width: 0; }
 .metrics :global(.metric) { min-height: 0; padding: 18px; }
@@ -42,6 +52,7 @@
 .clientDebtTotal > strong { color:var(--green); font-size:28px; line-height:1; }
 .clientDebtTotal > span { color:var(--muted); font-size:14px; }
 .alerts { grid-column: 2; grid-row: 1 / 4; gap: 14px; background: linear-gradient(165deg,#131d2a,#0d141e); }
+.fixedAlerts { min-width: 0; }
 .alertHeader { display: flex; gap: 10px; align-items: center; }
 .alertHeader h2 { font-size: 17px; }
 .bell { color: var(--amber); flex-shrink: 0; }
@@ -82,7 +93,10 @@
 }
 @media (max-width: 740px) {
   .page { height: auto; min-height: 0; }
-  .page :global(.page-head) { gap: 10px; }
+  .page :global(.page-head) { flex-direction: row; align-items: center; gap: 10px; }
+  .page :global(.page-head > div:first-child) { min-width: 0; }
+  .alertTrigger { width: 42px; height: 42px; }
+  .alertDropdown { right: 0; width: min(360px, calc(100vw - 36px)); }
   .layout { display: flex; flex-direction: column; margin-top: 6px; }
   .metrics { gap: 8px; grid-template-columns: minmax(0, 1fr); }
   .metrics :global(.metric) { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px; }
@@ -97,5 +111,6 @@
   .purchaseFooter .link { margin: 6px 0 0 13px; }
   .debtTotal { flex-wrap: wrap; }
   .debtTotal .previewBadge { margin-left: 0; }
-  .alerts { min-height: 420px; }
+  .fixedAlerts { display: none; }
+  .dropdownAlerts { min-height: 0; }
 }

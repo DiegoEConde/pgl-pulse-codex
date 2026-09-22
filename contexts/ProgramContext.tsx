@@ -38,8 +38,10 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
     // La fecha cambia incluso en segundo plano; los datos se consultan si la pestaña está visible.
     const interval = setInterval(() => { setToday(operationalDate()); if (!document.hidden) void refresh(); }, 30000);
     const focus = () => { void refresh(); };
+    const visibility = () => { if (!document.hidden) void refresh(); };
     window.addEventListener("focus", focus);
-    return () => { clearTimeout(kickoff); clearInterval(interval); window.removeEventListener("focus", focus); cancelRefresh(); };
+    document.addEventListener("visibilitychange", visibility);
+    return () => { clearTimeout(kickoff); clearInterval(interval); window.removeEventListener("focus", focus); document.removeEventListener("visibilitychange", visibility); cancelRefresh(); };
   }, [refresh, cancelRefresh]);
   const derived = useMemo(() => deriveOperations(raw), [raw]);
   return <Context.Provider value={{ raw, today, loading, refreshing, error, refresh, ...derived }}>{children}</Context.Provider>;
