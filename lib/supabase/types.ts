@@ -111,6 +111,7 @@ export type Database = {
           id: number
           observaciones: string | null
           proveedor_id: number
+          repartidor_id: number | null
           solicitud_id: string | null
         }
         Insert: {
@@ -122,6 +123,7 @@ export type Database = {
           id?: number
           observaciones?: string | null
           proveedor_id: number
+          repartidor_id?: number | null
           solicitud_id?: string | null
         }
         Update: {
@@ -133,6 +135,7 @@ export type Database = {
           id?: number
           observaciones?: string | null
           proveedor_id?: number
+          repartidor_id?: number | null
           solicitud_id?: string | null
         }
         Relationships: [
@@ -141,6 +144,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedor"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_pedido_repartidor"
+            columns: ["repartidor_id"]
+            isOneToOne: false
+            referencedRelation: "repartidor"
             referencedColumns: ["id"]
           },
         ]
@@ -205,6 +215,27 @@ export type Database = {
         }
         Relationships: []
       }
+      repartidor: {
+        Row: {
+          id: number
+          nombre: string
+          observaciones: string | null
+          telefono: string | null
+        }
+        Insert: {
+          id?: number
+          nombre: string
+          observaciones?: string | null
+          telefono?: string | null
+        }
+        Update: {
+          id?: number
+          nombre?: string
+          observaciones?: string | null
+          telefono?: string | null
+        }
+        Relationships: []
+      }
       reporte_config: {
         Row: {
           chart_type: string
@@ -259,6 +290,7 @@ export type Database = {
           precio_venta_usd: number | null
           producto_id: number
           ram: string | null
+          repartidor_id: number | null
           solicitud_venta_id: string | null
           variante: string | null
           vendedor_id: number | null
@@ -286,6 +318,7 @@ export type Database = {
           precio_venta_usd?: number | null
           producto_id: number
           ram?: string | null
+          repartidor_id?: number | null
           solicitud_venta_id?: string | null
           variante?: string | null
           vendedor_id?: number | null
@@ -313,6 +346,7 @@ export type Database = {
           precio_venta_usd?: number | null
           producto_id?: number
           ram?: string | null
+          repartidor_id?: number | null
           solicitud_venta_id?: string | null
           variante?: string | null
           vendedor_id?: number | null
@@ -337,6 +371,13 @@ export type Database = {
             columns: ["producto_id"]
             isOneToOne: false
             referencedRelation: "producto"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_unidad_repartidor"
+            columns: ["repartidor_id"]
+            isOneToOne: false
+            referencedRelation: "repartidor"
             referencedColumns: ["id"]
           },
           {
@@ -384,6 +425,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      pgl_assign_order_courier: { Args: { p_id: number; p_courier: number | null }; Returns: undefined }
+      pgl_assign_sale_courier: { Args: { p_unit: number; p_courier: number | null }; Returns: undefined }
       pgl_generate_orders: { Args: { p_ids: Json }; Returns: number }
       pgl_receive_and_pay_order: { Args: { p_id: number; p_units: Json; p_amount: number }; Returns: undefined }
       pgl_create_product: { Args: { p_category: number; p_name: string; p_brand: string }; Returns: number }

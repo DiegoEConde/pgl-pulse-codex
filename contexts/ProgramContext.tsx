@@ -5,7 +5,7 @@ import { deriveOperations } from "@/lib/operations";
 import { operationalDate } from "@/lib/dates";
 import type { Snapshot } from "@/types/operations";
 
-const empty: Snapshot = { products: [], suppliers: [], clients: [], sellers: [], orders: [], lines: [], units: [], charts: [] };
+const empty: Snapshot = { products: [], suppliers: [], clients: [], sellers: [], couriers: [], orders: [], lines: [], units: [], charts: [] };
 type Value = ReturnType<typeof deriveOperations> & {
   raw: Snapshot; today: string; loading: boolean; error: string; refreshing: boolean; refresh: () => Promise<void>;
 };
@@ -25,7 +25,7 @@ export function ProgramProvider({ children }: { children: ReactNode }) {
       const { data, error } = await getSupabase().rpc("pgl_snapshot");
       if (error) throw error;
       if (!data || typeof data !== "object" || Array.isArray(data) || Object.keys(empty).some(key => !Array.isArray(data[key]))) throw new Error("Respuesta incompleta");
-      if (request === generation.current) { setRaw(data as unknown as Snapshot); setError(""); setToday(operationalDate()); }
+      if (request === generation.current) { setRaw({ ...empty, ...(data as unknown as Snapshot) }); setError(""); setToday(operationalDate()); }
     } catch {
       if (request === generation.current) setError("No se pudieron actualizar los datos. Revisá la conexión y volvé a intentar.");
     } finally {

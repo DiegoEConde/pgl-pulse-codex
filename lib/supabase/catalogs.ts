@@ -27,6 +27,10 @@ export async function persistRecord(catalog: CatalogId, record: MasterRecord, is
         const payload = values as Database["public"]["Tables"]["vendedor"]["Insert"];
         return isNew ? client.from("vendedor").insert(payload) : client.from("vendedor").update(payload).eq("id", record.id);
       }
+      case "couriers": {
+        const payload = values as Database["public"]["Tables"]["repartidor"]["Insert"];
+        return isNew ? client.from("repartidor").insert(payload) : client.from("repartidor").update(payload).eq("id", record.id);
+      }
     }
   })();
   const { data, error } = await query.select("*").single();

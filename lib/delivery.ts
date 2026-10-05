@@ -4,10 +4,11 @@ import { decodePurchaseDetails, memoryLabel, variantLabel } from "./purchase-det
 export function buildDeliveryGroups(raw: Snapshot) {
   const products = new Map(raw.products.map(product => [product.id, product]));
   const suppliers = new Map(raw.suppliers.map(supplier => [supplier.id, supplier]));
+  const couriers = new Map((raw.couriers ?? []).map(courier => [courier.id, courier]));
   const groups = new Map<number, {
     supplierId: number; name: string; address: string; phone: string;
     from: string; until: string;
-    lines: { id: number; orderId: number; product: string; ram: string; rom: string; variant: string; color: string; quantity: number; cost: number; status: string }[];
+    lines: { id: number; orderId: number; product: string; ram: string; rom: string; variant: string; color: string; quantity: number; cost: number; status: string; courierId: number | null; courier: string }[];
   }>();
   // Un cierre histórico no acredita recepción: el pedido sigue pendiente hasta RECIBIDO.
   for (const order of raw.orders) {
@@ -18,7 +19,8 @@ export function buildDeliveryGroups(raw: Snapshot) {
       const product = products.get(line.producto_id);
       const spec = specs.find(item => item.producto_id === line.producto_id && item.color === line.color);
       return { id: line.id, orderId: order.id, product: product ? [product.marca, product.nombre].filter(Boolean).join(" · ") : "Producto no disponible",
-        ram: line.atributos?.ram ?? spec?.ram ?? "", rom: line.atributos?.rom ?? spec?.rom ?? "", variant: variantLabel(line.atributos), color: line.color, quantity: line.cantidad, cost: line.precio_costo_usd, status: order.estado };
+        ram: line.atributos?.ram ?? spec?.ram ?? "", rom: line.atributos?.rom ?? spec?.rom ?? "", variant: variantLabel(line.atributos), color: line.color, quantity: line.cantidad, cost: line.precio_costo_usd, status: order.estado,
+        courierId: order.repartidor_id ?? null, courier: couriers.get(order.repartidor_id ?? 0)?.nombre ?? "Sin asignar" };
     });
     if (!lines.length) continue;
     let group = groups.get(order.proveedor_id);
@@ -37,6 +39,7 @@ export function buildDeliveryGroups(raw: Snapshot) {
 export function buildPendingOrders(raw: Snapshot) {
   const products = new Map(raw.products.map(product => [product.id, product]));
   const suppliers = new Map(raw.suppliers.map(supplier => [supplier.id, supplier]));
+  const couriers = new Map((raw.couriers ?? []).map(courier => [courier.id, courier]));
   const payments = raw.supplierPayments ?? [];
   return raw.orders.filter(order => order.estado === "PEDIDO" || order.estado === "ENVÍO").map(order => {
     const specs = decodePurchaseDetails(order.observaciones).lines;
@@ -47,7 +50,8 @@ export function buildPendingOrders(raw: Snapshot) {
     });
     const total = lines.reduce((sum, line) => sum + line.cantidad * line.precio_costo_usd, 0) + order.costo_envio_usd;
     const paid = payments.filter(payment => payment.pedido_id === order.id).reduce((sum, payment) => sum + payment.importe_usd, 0);
-    return { id: order.id, date: order.fecha_pedido ?? "", supplierId: order.proveedor_id, supplier: suppliers.get(order.proveedor_id)?.nombre ?? "Proveedor no disponible", lines, total, paid, debt: Math.max(0, total - paid) };
+    return { id: order.id, date: order.fecha_pedido ?? "", supplierId: order.proveedor_id, supplier: suppliers.get(order.proveedor_id)?.nombre ?? "Proveedor no disponible",
+      courierId: order.repartidor_id ?? null, courier: couriers.get(order.repartidor_id ?? 0)?.nombre ?? "Sin asignar", lines, total, paid, debt: Math.max(0, total - paid) };
   }).sort((a, b) => a.id - b.id);
 }
 
@@ -58,12 +62,13 @@ export function formatDeliveryMessage(groups: ReturnType<typeof buildDeliveryGro
   const time = (value: string) => value.endsWith(":00") ? String(Number(value.slice(0, 2))) : value;
   return groups.map(group => {
     const hours = group.from && group.until ? `de ${time(group.from)} a ${time(group.until)}` : group.from ? `desde ${time(group.from)}` : group.until ? `hasta ${time(group.until)}` : "Horario sin definir";
+    const courier = [...new Set(group.lines.map(line => line.courier).filter(name => name !== "Sin asignar"))].join(", ");
     const lines = group.lines.map(line => {
       const name = clean(line.product.replace(/ · /g, " ")).toUpperCase();
       const memory = line.ram || line.rom ? ` ${memoryLabel(clean(line.ram), clean(line.rom), true)}` : "";
       return `(${line.quantity}) ${name}${memory}${line.variant ? " " + clean(line.variant) : ""} - $ ${money(Math.round(line.cost * 100))}\n${clean(line.color).toUpperCase()}`;
     });
     const total = group.lines.reduce((sum, line) => sum + Math.round(line.cost * 100) * line.quantity, 0);
-    return `*${clean(group.name).toUpperCase()} - ${clean(group.address) || "Dirección sin cargar"}*\n${hours}\n\n${lines.join("\n\n")}\n\n*(TOTAL: USD ${money(total)})*`;
+    return `*${clean(group.name).toUpperCase()} - ${clean(group.address) || "Dirección sin cargar"}*\n${hours}${courier ? `\nRepartidor: ${clean(courier)}` : ""}\n\n${lines.join("\n\n")}\n\n*(TOTAL: USD ${money(total)})*`;
   }).join("\n\n---\n\n");
 }

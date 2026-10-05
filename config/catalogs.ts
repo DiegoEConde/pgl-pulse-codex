@@ -1,4 +1,4 @@
-export type CatalogId = "products" | "suppliers" | "clients" | "sellers";
+export type CatalogId = "products" | "suppliers" | "clients" | "sellers" | "couriers";
 export type MasterRecord = { id: number; nombre: string; [key: string]: string | number | null | Record<string, string> };
 export type CatalogField = { key: string; label: string; type?: "text" | "tel" | "time" | "number" | "textarea"; required?: boolean; maxLength?: number };
 export type CatalogConfig = { label: string; singular: string; table: string; description: string; fields: CatalogField[] };
@@ -132,6 +132,31 @@ export const catalogConfig: Record<CatalogId, CatalogConfig> = {
         "label": "Comisión (%)",
         "type": "number",
         "required": true
+      },
+      {
+        "key": "observaciones",
+        "label": "Observaciones",
+        "type": "textarea"
+      }
+    ]
+  },
+  "couriers": {
+    "label": "Repartidores",
+    "singular": "Repartidor",
+    "table": "repartidor",
+    "description": "Personas que retiran pedidos y entregan ventas.",
+    "fields": [
+      {
+        "key": "nombre",
+        "label": "Nombre",
+        "required": true,
+        "maxLength": 120
+      },
+      {
+        "key": "telefono",
+        "label": "Teléfono",
+        "type": "tel",
+        "maxLength": 50
       },
       {
         "key": "observaciones",

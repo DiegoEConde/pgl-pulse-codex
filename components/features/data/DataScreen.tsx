@@ -4,7 +4,7 @@ import { createPortal } from "react-dom";
 import CharacteristicInput from "@/components/features/purchases/CharacteristicInput";
 import { categoryLabel, productAttributes, sameProduct } from "@/lib/product-catalog";
 import { useMemo, useRef, useState } from "react";
-import { ArrowLeft, Boxes, Building2, Pencil, Plus, Search, Store, UsersRound, X, type LucideIcon } from "lucide-react";
+import { ArrowLeft, Boxes, Building2, Pencil, Plus, Search, Store, Truck, UsersRound, X, type LucideIcon } from "lucide-react";
 import PagedTable from "@/components/ui/PagedTable";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
 import { catalogConfig, type CatalogId, type MasterRecord } from "@/config/catalogs";
@@ -13,7 +13,7 @@ import { useProgram } from "@/contexts/ProgramContext";
 import layout from "@/components/ui/OperationalLayout.module.css";
 import styles from "./DataScreen.module.css";
 
-const icons: Record<CatalogId, LucideIcon> = { products: Boxes, suppliers: Building2, clients: UsersRound, sellers: Store };
+const icons: Record<CatalogId, LucideIcon> = { products: Boxes, suppliers: Building2, clients: UsersRound, sellers: Store, couriers: Truck };
 
 export default function DataScreen() {
   const { raw, refresh } = useProgram();

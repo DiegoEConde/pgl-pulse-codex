@@ -8,6 +8,7 @@ export function deriveOperations(data: Snapshot) {
   const suppliers = new Map(data.suppliers.map(row => [row.id, row]));
   const clients = new Map(data.clients.map(row => [row.id, row]));
   const sellers = new Map(data.sellers.map(row => [row.id, row]));
+  const couriers = new Map((data.couriers ?? []).map(row => [row.id, row]));
   const ordersById = new Map(data.orders.map(row => [row.id, row]));
   const orders: PurchaseOrder[] = data.orders.map(order => {
     const details = decodePurchaseDetails(order.observaciones);
@@ -43,7 +44,8 @@ export function deriveOperations(data: Snapshot) {
     return {
     id: unit.id, unitId: "U-" + unit.id, product: products.get(unit.producto_id)?.nombre ?? "—", code: unit.codigo ?? "",
     client: clients.get(unit.cliente_id ?? 0)?.nombre ?? "—", clientId: unit.cliente_id ?? 0,
-    seller: sellers.get(unit.vendedor_id ?? 0)?.nombre ?? "—", date: operationalDate(unit.fecha_venta!),
+    seller: sellers.get(unit.vendedor_id ?? 0)?.nombre ?? "—", courier: couriers.get(unit.repartidor_id ?? 0)?.nombre ?? "Sin asignar",
+    courierId: unit.repartidor_id ?? null, date: operationalDate(unit.fecha_venta!),
     priceUsd: unit.precio_venta_usd ?? 0, costUsd: unit.precio_costo_usd + unit.costo_envio_usd,
     commissionUsd: unit.comision_usd ?? 0, paid: unit.pago_verificado,
     openingPaidUsd, payments, paidUsd: paidCents/100,

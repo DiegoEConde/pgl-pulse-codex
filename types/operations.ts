@@ -9,6 +9,7 @@ export type PurchaseOrder = {
 export type SaleStatus = "REPARTO" | "ENTREGADA";
 export type Sale = {
   id: number; unitId: string; product: string; code: string; client: string; seller: string;
+  courier: string; courierId: number | null;
   clientId: number; date: string; priceUsd: number; costUsd: number; commissionUsd: number;
   paid: boolean; paidUsd: number; pendingUsd: number; openingPaidUsd: number; payments: SalePayment[]; status: SaleStatus; deliveredAt: string | null;
 };
@@ -26,7 +27,7 @@ export type Snapshot = {
   categoryCharacteristics?: import("@/lib/categories").CategoryCharacteristic[];
   salePayments?: SalePayment[];
   products: Tables<"producto">[]; suppliers: Tables<"proveedor">[]; clients: Tables<"cliente">[];
-  sellers: Tables<"vendedor">[]; orders: Tables<"pedido">[]; lines: (Tables<"detalle_pedido"> & { atributos?: Record<string, string> })[];
+  sellers: Tables<"vendedor">[]; couriers: Tables<"repartidor">[]; orders: Tables<"pedido">[]; lines: (Tables<"detalle_pedido"> & { atributos?: Record<string, string> })[];
   units: (Tables<"unidad"> & { cobrado_inicial_usd?: number })[]; charts: Tables<"reporte_config">[];
   supplierPayments?: { id: number; pedido_id: number; proveedor_id: number; importe_usd: number; registrado_en: string }[];
 };
