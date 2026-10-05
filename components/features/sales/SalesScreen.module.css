@@ -37,6 +37,7 @@
 .detailItem strong { font-size: 16px; }
 .detailBody { padding: 22px 24px; }
 .detailBody h3 { margin: 0 0 14px; font-size: 15px; }
+.receipt { margin: 0 0 16px; padding: 12px 14px; color: #bce4ff; background: rgba(51,156,255,.07); border: 1px solid rgba(120,196,255,.18); border-radius: 10px; font-weight: 650; }
 @media (max-width: 950px) { .detailGrid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 680px) { .wide { grid-column: auto; } .formGrid, .detailGrid { grid-template-columns: 1fr; } }
 

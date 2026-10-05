@@ -274,6 +274,7 @@ export type Database = {
           comision_usd: number | null
           costo_envio_usd: number
           detalle_pedido_id: number | null
+          entrega_modo: string | null
           estado: string
           fecha_entrega: string | null
           fecha_garantia: string | null
@@ -302,6 +303,7 @@ export type Database = {
           comision_usd?: number | null
           costo_envio_usd: number
           detalle_pedido_id?: number | null
+          entrega_modo?: string | null
           estado: string
           fecha_entrega?: string | null
           fecha_garantia?: string | null
@@ -330,6 +332,7 @@ export type Database = {
           comision_usd?: number | null
           costo_envio_usd?: number
           detalle_pedido_id?: number | null
+          entrega_modo?: string | null
           estado?: string
           fecha_entrega?: string | null
           fecha_garantia?: string | null
@@ -420,6 +423,186 @@ export type Database = {
         }
         Relationships: []
       }
+      ruta_reparto: {
+        Row: {
+          cerrado_en: string | null
+          creado_en: string
+          dinero_devuelto_usd: number | null
+          dinero_entregado_usd: number
+          estado: string
+          fecha: string
+          id: number
+          observaciones: string | null
+          repartidor_id: number
+          solicitud_id: string | null
+        }
+        Insert: {
+          cerrado_en?: string | null
+          creado_en?: string
+          dinero_devuelto_usd?: number | null
+          dinero_entregado_usd?: number
+          estado?: string
+          fecha: string
+          id?: number
+          observaciones?: string | null
+          repartidor_id: number
+          solicitud_id?: string | null
+        }
+        Update: {
+          cerrado_en?: string | null
+          creado_en?: string
+          dinero_devuelto_usd?: number | null
+          dinero_entregado_usd?: number
+          estado?: string
+          fecha?: string
+          id?: number
+          observaciones?: string | null
+          repartidor_id?: number
+          solicitud_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ruta_reparto_repartidor_id_fkey"
+            columns: ["repartidor_id"]
+            isOneToOne: false
+            referencedRelation: "repartidor"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ruta_reparto_pedido: {
+        Row: { pedido_id: number; ruta_id: number }
+        Insert: { pedido_id: number; ruta_id: number }
+        Update: { pedido_id?: number; ruta_id?: number }
+        Relationships: [
+          {
+            foreignKeyName: "ruta_reparto_pedido_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedido"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ruta_reparto_pedido_ruta_id_fkey"
+            columns: ["ruta_id"]
+            isOneToOne: false
+            referencedRelation: "ruta_reparto"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ruta_reparto_unidad: {
+        Row: { ruta_id: number; unidad_id: number }
+        Insert: { ruta_id: number; unidad_id: number }
+        Update: { ruta_id?: number; unidad_id?: number }
+        Relationships: [
+          {
+            foreignKeyName: "ruta_reparto_unidad_ruta_id_fkey"
+            columns: ["ruta_id"]
+            isOneToOne: false
+            referencedRelation: "ruta_reparto"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ruta_reparto_unidad_unidad_id_fkey"
+            columns: ["unidad_id"]
+            isOneToOne: false
+            referencedRelation: "unidad"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ruta_reparto_movimiento: {
+        Row: {
+          creado_en: string
+          id: number
+          importe_usd: number
+          observaciones: string | null
+          referencia_id: number | null
+          referencia_tipo: string | null
+          ruta_id: number
+          tipo: string
+        }
+        Insert: {
+          creado_en?: string
+          id?: number
+          importe_usd: number
+          observaciones?: string | null
+          referencia_id?: number | null
+          referencia_tipo?: string | null
+          ruta_id: number
+          tipo: string
+        }
+        Update: {
+          creado_en?: string
+          id?: number
+          importe_usd?: number
+          observaciones?: string | null
+          referencia_id?: number | null
+          referencia_tipo?: string | null
+          ruta_id?: number
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ruta_reparto_movimiento_ruta_id_fkey"
+            columns: ["ruta_id"]
+            isOneToOne: false
+            referencedRelation: "ruta_reparto"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comprobante_venta: {
+        Row: {
+          cliente_nombre: string
+          contenido: Json
+          estado: string
+          fecha: string
+          id: number
+          numero: number
+          pagado_usd: number
+          producto_nombre: string
+          saldo_usd: number
+          total_usd: number
+          unidad_id: number
+        }
+        Insert: {
+          cliente_nombre: string
+          contenido?: Json
+          estado: string
+          fecha?: string
+          id?: number
+          numero?: number
+          pagado_usd: number
+          producto_nombre: string
+          saldo_usd: number
+          total_usd: number
+          unidad_id: number
+        }
+        Update: {
+          cliente_nombre?: string
+          contenido?: Json
+          estado?: string
+          fecha?: string
+          id?: number
+          numero?: number
+          pagado_usd?: number
+          producto_nombre?: string
+          saldo_usd?: number
+          total_usd?: number
+          unidad_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comprobante_venta_unidad_id_fkey"
+            columns: ["unidad_id"]
+            isOneToOne: true
+            referencedRelation: "unidad"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -427,12 +610,17 @@ export type Database = {
     Functions: {
       pgl_assign_order_courier: { Args: { p_id: number; p_courier: number | null }; Returns: undefined }
       pgl_assign_sale_courier: { Args: { p_unit: number; p_courier: number | null }; Returns: undefined }
+      pgl_close_delivery_route: { Args: { p_id: number; p_returned: number; p_notes: string }; Returns: Json }
+      pgl_create_delivery_route: { Args: { p_courier: number; p_date: string; p_cash: number; p_order_ids: Json; p_unit_ids: Json; p_request: string }; Returns: number }
       pgl_generate_orders: { Args: { p_ids: Json }; Returns: number }
+      pgl_generate_sale_receipt: { Args: { p_unit: number }; Returns: number }
       pgl_receive_and_pay_order: { Args: { p_id: number; p_units: Json; p_amount: number }; Returns: undefined }
+      pgl_set_sale_delivery: { Args: { p_unit: number; p_mode: string; p_courier: number | null }; Returns: undefined }
       pgl_create_product: { Args: { p_category: number; p_name: string; p_brand: string }; Returns: number }
       pgl_add_category_value: { Args: { p_characteristic: number; p_value: string }; Returns: string }
       pgl_add_sale_payment: { Args: { p_id: number; p_amount: number; p_request: string; p_delivered: boolean }; Returns: number }
       pgl_create_sale_partial: { Args: { p_unit: number; p_client: number; p_seller: number; p_date: string; p_price: number; p_commission: number; p_amount: number; p_request: string; p_delivered: boolean }; Returns: number }
+      pgl_create_sale_with_delivery: { Args: { p_unit: number; p_client: number; p_seller: number; p_date: string; p_price: number; p_commission: number; p_amount: number; p_request: string; p_delivered: boolean; p_delivery_mode: string; p_courier: number | null }; Returns: number }
       pgl_close_day: { Args: { p_date: string }; Returns: number }
       pgl_create_order: {
         Args: {

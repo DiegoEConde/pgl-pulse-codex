@@ -5,7 +5,7 @@ import { deriveOperations } from "@/lib/operations";
 import { operationalDate } from "@/lib/dates";
 import type { Snapshot } from "@/types/operations";
 
-const empty: Snapshot = { products: [], suppliers: [], clients: [], sellers: [], couriers: [], orders: [], lines: [], units: [], charts: [] };
+const empty: Snapshot = { products: [], suppliers: [], clients: [], sellers: [], couriers: [], orders: [], lines: [], units: [], charts: [], routes: [], routeOrders: [], routeUnits: [], routeMovements: [], receipts: [] };
 type Value = ReturnType<typeof deriveOperations> & {
   raw: Snapshot; today: string; loading: boolean; error: string; refreshing: boolean; refresh: () => Promise<void>;
 };

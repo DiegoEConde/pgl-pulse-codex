@@ -7,9 +7,10 @@ export type PurchaseOrder = {
   shippingUsd: number; notes?: string; closed: boolean; lines: PurchaseLine[];
 };
 export type SaleStatus = "REPARTO" | "ENTREGADA";
+export type DeliveryMode = "REPARTIDOR" | "RETIRA_CLIENTE";
 export type Sale = {
   id: number; unitId: string; product: string; code: string; client: string; seller: string;
-  courier: string; courierId: number | null;
+  courier: string; courierId: number | null; deliveryMode: DeliveryMode | null;
   clientId: number; date: string; priceUsd: number; costUsd: number; commissionUsd: number;
   paid: boolean; paidUsd: number; pendingUsd: number; openingPaidUsd: number; payments: SalePayment[]; status: SaleStatus; deliveredAt: string | null;
 };
@@ -22,6 +23,7 @@ export type StockUnit = {
 };
 // Contrato de pgl_snapshot; charts se conserva por compatibilidad con la base existente.
 export type SalePayment = { id: number; unidad_id: number; importe_usd: number; registrado_en: string; solicitud_id: string };
+export type SupplierPayment = { id: number; pedido_id: number; proveedor_id: number; importe_usd: number; registrado_en: string };
 export type Snapshot = {
   categories?: import("@/lib/categories").Category[];
   categoryCharacteristics?: import("@/lib/categories").CategoryCharacteristic[];
@@ -29,5 +31,10 @@ export type Snapshot = {
   products: Tables<"producto">[]; suppliers: Tables<"proveedor">[]; clients: Tables<"cliente">[];
   sellers: Tables<"vendedor">[]; couriers: Tables<"repartidor">[]; orders: Tables<"pedido">[]; lines: (Tables<"detalle_pedido"> & { atributos?: Record<string, string> })[];
   units: (Tables<"unidad"> & { cobrado_inicial_usd?: number })[]; charts: Tables<"reporte_config">[];
-  supplierPayments?: { id: number; pedido_id: number; proveedor_id: number; importe_usd: number; registrado_en: string }[];
+  supplierPayments?: SupplierPayment[];
+  routes?: Tables<"ruta_reparto">[];
+  routeOrders?: Tables<"ruta_reparto_pedido">[];
+  routeUnits?: Tables<"ruta_reparto_unidad">[];
+  routeMovements?: Tables<"ruta_reparto_movimiento">[];
+  receipts?: Tables<"comprobante_venta">[];
 };

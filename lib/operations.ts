@@ -45,7 +45,7 @@ export function deriveOperations(data: Snapshot) {
     id: unit.id, unitId: "U-" + unit.id, product: products.get(unit.producto_id)?.nombre ?? "—", code: unit.codigo ?? "",
     client: clients.get(unit.cliente_id ?? 0)?.nombre ?? "—", clientId: unit.cliente_id ?? 0,
     seller: sellers.get(unit.vendedor_id ?? 0)?.nombre ?? "—", courier: couriers.get(unit.repartidor_id ?? 0)?.nombre ?? "Sin asignar",
-    courierId: unit.repartidor_id ?? null, date: operationalDate(unit.fecha_venta!),
+    courierId: unit.repartidor_id ?? null, deliveryMode: unit.entrega_modo === "REPARTIDOR" || unit.entrega_modo === "RETIRA_CLIENTE" ? unit.entrega_modo as Sale["deliveryMode"] : null, date: operationalDate(unit.fecha_venta!),
     priceUsd: unit.precio_venta_usd ?? 0, costUsd: unit.precio_costo_usd + unit.costo_envio_usd,
     commissionUsd: unit.comision_usd ?? 0, paid: unit.pago_verificado,
     openingPaidUsd, payments, paidUsd: paidCents/100,

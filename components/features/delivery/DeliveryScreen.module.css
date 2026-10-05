@@ -43,6 +43,19 @@
 .generate > span:empty { display: none; }
 .drag { display:grid; place-items:center; cursor:grab; color:#77c6ff; }
 .hint { margin:0; color:var(--muted); font-size:13px; }
+.routes { margin-top: 18px; display: grid; gap: 12px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.018); }
+.routes > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.routes h2 { margin: 3px 0 0; font-size: 18px; }
+.routeCreator { display: grid; grid-template-columns: minmax(180px,1.1fr) minmax(150px,.8fr) minmax(120px,.6fr) auto; gap: 10px; align-items: end; }
+.routeCreator label, .routeCard label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 650; text-transform: uppercase; }
+.routeCreator select, .routeCreator input, .routeCard input { min-width: 0; height: 38px; padding: 8px 10px; color: var(--text); background: #0b1118; border: 1px solid var(--line); border-radius: 8px; }
+.routePreview { display: grid; gap: 3px; padding: 9px 12px; border: 1px solid rgba(120,196,255,.16); border-radius: 9px; background: rgba(51,156,255,.055); }
+.routePreview strong { font-size: 18px; line-height: 1; }
+.routePreview small, .routeCard small { color: var(--muted); }
+.routeList { display: grid; gap: 8px; }
+.routeCard { display: grid; grid-template-columns: minmax(0,1fr) minmax(120px,.35fr) minmax(120px,.45fr) auto; gap: 10px; align-items: end; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.routeCard > div { display: grid; gap: 4px; min-width: 0; }
+.routeCard strong { overflow-wrap: anywhere; }
 .pending { margin-top:18px; display:grid; gap:8px; }
 .pendingToggle { width:100%; display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border:1px solid var(--line); border-radius:11px; background:linear-gradient(110deg,rgba(255,176,55,.08),var(--surface)); color:var(--text); font-size:17px; font-weight:650; text-align:left; }
 .pendingToggle > span { display:flex; align-items:center; gap:10px; }
@@ -66,3 +79,4 @@
 .backButton { padding:9px 15px; border:1px solid rgba(124,196,255,.3); border-radius:9px; background:linear-gradient(135deg,rgba(51,156,255,.16),rgba(124,196,255,.07)); color:#b9e1ff!important; font-weight:600; }
 .backButton:hover { border-color:rgba(124,196,255,.55); background:rgba(51,156,255,.2); }
 @media (max-width:540px) { .pendingCards article { align-items:stretch; flex-direction:column; }.validateButton { width:100%; }.modal footer { align-items:stretch; flex-direction:column; }.modal footer button { width:100%; } }
+@media (max-width:860px) { .routeCreator, .routeCard { grid-template-columns: 1fr; align-items: stretch; } .routeCard button { width: 100%; } }
